@@ -1,0 +1,275 @@
+@color-body: #F5F5F5;
+@color-main: #03a9f4;
+@color-block: #FFF;
+@color-main-shadow: rgba(0,0,0,0.4);
+@color-delimeter: rgba(160, 160, 160, 0.4);
+@color-good: #c0ca33;
+@color-bad: #f4511e;
+@color-table-hover: #EEEEEE;
+
+*
+{
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+}
+#low-footer
+{
+	height: 20px;
+	background-color: burlywood;
+}
+#tab-bar p
+{
+	display: inline-block;
+	vertical-align: top;
+	width: 100px;
+	height: 38px;
+	line-height: 40px;
+	text-align: center;
+	border-bottom: 2px solid transparent;
+}
+#tab-bar
+{
+	height: 40px;
+	background-color: coral;
+}
+#tab
+{
+	height: ~"calc(100% - 60px)";
+	background-color: chocolate;
+}
+#sets, #map
+{
+	display: inline-block;
+	vertical-align: top;
+}
+#sets #footer
+{
+	height: 80px;
+	background-color: firebrick;
+}
+#sets #orderlist
+{
+	background-color: burlywood;
+	height: ~"calc(100% - 120px)";
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+#sets #header #store-date input
+{
+	border: 0;
+	width: 145px;
+	padding-left: 15px;
+	margin-left: 10px;
+	
+}
+#sets #header #store-date
+{
+	width: 250px;
+}
+#sets #header #store select
+{
+	width: 175px;
+	border: 0;
+	padding-left: 15px;
+	margin-left: 10px;
+}
+#sets #header #store
+{
+	width: 285px;
+	padding-left: 15px;
+}
+#sets #header *
+{
+	display: inline-block;
+	vertical-align: top;
+}
+#sets #header
+{
+	background-color: cadetblue;
+	height: 40px;
+	line-height: 40px;
+	vertical-align: top;
+}
+#sets
+{
+	width: 550px;
+	background-color: aliceblue;
+}
+#map
+{
+	width: ~"calc(100% - 550px)";
+	background-color: orange;
+}
+
+input[type="date"]:focus
+{
+	outline: 0;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover
+{
+	color: @color-main;
+	transition: 0.5s;
+	background-color: #FFF;
+}
+input[type="date"]::-webkit-calendar-picker-indicator
+{
+    font-size: 16px;
+	display: block;
+	transition: 0.5s;
+	background-color: none;	
+}
+input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin-button {
+    display: none;
+}
+
+.order
+{
+	height: 40px;
+	overflow: hidden;
+	width: 500px;
+	box-shadow: 0px 0px 10px -1px @color-main-shadow;
+	margin: 20px 0 20px 25px;
+}
+.order-header
+{
+	height: 20px;
+	padding: 10px 0px;
+	margin-left: 15px;
+	border-bottom: 2px solid @color-delimeter;
+	width: 470px;
+}
+.order .button-toggle
+{
+	display: inline-block;
+	height: 20px;
+	width: 20px;
+	margin-right: 15px;
+	background-color: darkgreen;
+}
+.order-title
+{
+	vertical-align: top;
+	display: inline-block;
+	width: 435px;
+	height: 20px;
+	line-height: 20px;
+}
+.order-body
+{
+	width: 470px;
+	height: 120px;
+	margin-top: 15px;
+	padding: 0px 15px;
+}
+.order-body p
+{
+	width: 210px;
+	line-height: 25px;
+	display: inline-block;
+	vertical-align: top;
+}
+.order-body input
+{
+	display: inline-block;
+	vertical-align: top;
+	height: 23px;
+	line-height: 25px;
+	border: none;
+	border-bottom: 2px solid @color-delimeter;
+}
+.order-adress-street
+{
+	width: 200px;
+	padding: 0px 5px;
+	margin-right: 10px;
+}
+.order-adress-house
+{
+	width: 50px;
+	text-align: center;
+	margin-right: 10px;
+}
+.order-adress-block
+{
+	width: 40px;
+	text-align: center;
+	margin-right: 10px;
+}
+.order-adress-entry
+{
+	width: 40px;
+	text-align: center;
+	margin-right: 10px;
+}
+.order-adress-floor
+{
+	width: 40px;
+	text-align: center;
+	margin-right: 10px;
+}
+.order-adress-flat
+{
+	width: 40px;
+	text-align: center;
+}
+.order-time
+{
+	height: 25px;
+	margin: 10px 0px;
+}
+.order-time input
+{
+	width: 100px;
+}
+.order-time span
+{
+	height: 25px;
+	width: 20px;
+	line-height: 25px;
+}
+.order-items
+{
+	height: 25px;
+	margin: 10px 0px;
+}
+.button-more
+{
+	height: 25px;
+	width: 25px;
+	background-color: aqua;
+	display: inline-block;
+	margin-left: 235px;
+}
+.order-buttons
+{
+	height: 20px;
+}
+#left-footer, #right-footer
+{
+	display: inline-block;
+	vertical-align: top;
+}
+#left-footer
+{
+	width: 200px;
+}
+#left-footer p
+{
+	width: 180px;
+	padding-left: 20px;
+	height: 40px;
+	line-height: 40px;
+}
+#right-footer
+{
+	width: 350px;
+}
+#right-footer p
+{
+	width: 180px;
+	padding-left: 150px;
+	height: 40px;
+	line-height: 40px;
+}

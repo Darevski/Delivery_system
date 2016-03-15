@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet/less" type="text/css" href="./css/main.less">
+    <link rel="stylesheet" type="text/css" href="./css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="./css/loader.css">
+    <title>Доставка</title>
+</head>
+<body>
+	<div id="tab-bar"><!--
+	--><p>Заказы</p><!--
+	--></div>
+	<div id="tab"><!--
+		--><div id="sets">
+			<div id="header"><div id="store">Склад:<select>
+				<option value="1">Первый</option>
+				<option value="1">Второй</option>
+				<option value="1">Третий</option>
+				</select></div><div id="store-date">Дата:<input type="date"></div></div>
+			<div id="orderlist">
+				<div class="order"> <!-- 192px max -->
+					<div class="order-header"><div class="button-toggle"></div><p class="order-title">1. Белозерская, д.12, кв. 57</p></div>
+					<div class="order-body">
+						<input type="text" class="order-adress-street"><!--
+					 --><input type="text" class="order-adress-house"><!--
+					 --><input type="text" class="order-adress-block"><!--
+					 --><input type="text" class="order-adress-entry"><!--
+					 --><input type="text" class="order-adress-floor"><!--
+					 --><input type="text" class="order-adress-flat">
+						<div class="order-time"><p>Желаемое время доставки:</p><p style="width: 25px; text-align: center;">с</p><input type="time" class="time-from"><p style="width: 35px; text-align: center;">по</p><input type="time" class="time-to"></div>
+						<div class="order-items"><p>5 товаров на сумму $400.12</p><div class="button-more"></div></div>
+						<div class="order-buttons"><div class="button-delete"></div><div class="button-reset"></div><div class="button-save"></div></div>
+					</div>
+				</div>
+			</div>
+			<div id="footer">
+				<div id="left-footer"><p>Итого:</p></div><div id="right-footer">
+					<p>12 заказов</p>
+					<p>общей суммой $402.12</p>
+				</div>
+			</div>
+		</div><!--
+		--><div id="map"></div>
+	</div>
+	<div id="low-footer"><a target="_blank" href="https://github.com/Darevski/Delivery_system">GitHub</a></div>
+	<script type="text/javascript" src="./js/less.min.js"></script>
+</body>
+</html>
