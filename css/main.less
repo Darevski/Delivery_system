@@ -7,7 +7,7 @@
 @color-bad: #f4511e;
 @color-table-hover: #EEEEEE;
 
-input, select { outline: none; }
+input, select { outline: none; 	display: inline-block; vertical-align: top; }
 input:focus, select:focus { outline: none; }
 input[type="date"]:focus
 {
@@ -132,23 +132,24 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	width: 500px;
 	box-shadow: 0px 0px 10px -1px @color-main-shadow;
 	margin: 20px 0 20px 25px;
+	transition: 0.5s;
 }
 .order-header
 {
 	height: 20px;
 	padding: 10px 0px;
 	margin-left: 15px;
-	border-bottom: 2px solid @color-delimeter;
+	border-bottom: 2px solid @color-main;
 	width: 470px;
 }
 .order-header:hover .button-toggle
 {
 	border-left: 12px solid @color-main;
-	transition: 0.2s;
+	transition: 0.5s;
 }
 .order .button-toggle
 {
-	transition: 0.2s;
+	transition: 0.5s;
 	display: inline-block;
 	margin: 4px 15px 0 0;
 	width: 0;
@@ -168,7 +169,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 .order-body
 {
 	width: 470px;
-	height: 120px;
+	height: 175px;
 	margin-top: 15px;
 	padding: 0px 15px;
 }
@@ -179,10 +180,14 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	display: inline-block;
 	vertical-align: top;
 }
+.order-body input:focus
+{
+	border-bottom: 2px solid @color-main;
+	transition: 0.5s;
+}
 .order-body input
 {
-	display: inline-block;
-	vertical-align: top;
+	transition: 0.5s;
 	height: 23px;
 	line-height: 25px;
 	border: none;
@@ -223,6 +228,10 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	width: 40px;
 	text-align: center;
 }
+.order-phone
+{
+	width: 50px;
+}
 .order-time
 {
 	height: 25px;
@@ -242,6 +251,22 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 {
 	height: 25px;
 	margin: 10px 0px;
+}
+.order-phone p
+{
+	width: 100px;
+}
+.order-phone input
+{
+	width: 350px;
+	padding-left: 20px;
+	margin: 0;
+}
+.order-phone
+{
+	height: 25px;
+	margin: 10px 0px;
+	width: 470px;
 }
 .order-buttons
 {
@@ -274,15 +299,15 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	height: 40px;
 	line-height: 40px;
 }
-.button-more:hover, .button-delete:hover, .button-edit:hover, .button-reset:hover, .button-save:hover
+.button-more:hover, .button-delete:hover, .button-edit:hover, .button-reset:hover, .button-save:hover, .button-cancel:hover
 {
 	opacity: 1;
-	transition: 0.3s;
+	transition: 0.5s;
 }
-.button-more, .button-delete, .button-edit, .button-reset, .button-save
+.button-more, .button-delete, .button-edit, .button-reset, .button-save, .button-cancel
 {
 	opacity: 0.6;
-	transition: 0.3s;
+	transition: 0.5s;
 	margin-right: 14px;
 	background-position: center center;
 	background-size: 24px;
@@ -319,10 +344,185 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	width: 0;
 	opacity: 0;
 }
+.button-cancel
+{
+	background-image: url("./icons/cancel.png");
+	float: right;
+}
 .button-save
 {
 	background-image: url("./icons/save.png");
 	float: right;
 	width: 0;
 	opacity: 0;
+}
+.add-floating-button:hover
+{
+	box-shadow: 0 2px 20px -3px #000;
+	background-color: @color-main;
+	transition: 0.5s;
+}
+.add-floating-button
+{
+	transition: 0.5s;
+	border-radius: 50px;
+	background-color: lighten(@color-main, 5%);
+	width: 50px;
+	height: 50px;
+	position: fixed;
+	left: 475px;
+	bottom: 75px;
+	background-image: url("./icons/plus.png");
+	background-size: 25px;
+	background-repeat: no-repeat;
+	background-position: center center;
+	box-shadow: 0 2px 10px -3px #000;
+}
+#add-order
+{
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 1;
+	background-color: @color-main-shadow;
+}
+#add-order-window
+{
+	background-color: @color-block;
+	width: 760px;
+	height: 490px;
+	position: fixed;
+	z-index: 2;
+	top: ~"calc(50% - 250px)";
+	left: ~"calc(50% - 400px)";
+	box-shadow: 0 0 50px -5px #000;
+	padding: 0px 20px 10px 20px;
+}
+#add-order-window > p:first-child
+{
+	width: 100%;
+	height: 40px;
+	line-height: 40px;
+	color: @color-main-shadow;
+	text-align: center;
+}
+#add-order-window input:focus
+{
+	transition: 0.5s;
+	border-bottom: 2px solid @color-main;
+}
+#add-order-window input
+{
+	transition: 0.5s;
+	display: inline-block;
+	vertical-align: top;
+	height: 23px;
+	line-height: 25px;
+	border: none;
+	border-bottom: 2px solid @color-delimeter;
+}
+#add-order-adress-street
+{
+	width: 380px;
+	padding-left: 20px;
+}
+#add-order-adress-house
+{
+	margin-left: 20px;
+	width: 60px;
+	text-align: center;
+}
+#add-order-adress-block, #add-order-adress-entry, #add-order-adress-floor, #add-order-adress-flat
+{
+	margin-left: 20px;
+	width: 50px;
+	text-align: center;
+}
+#add-order-window p
+{
+	width: 250px;
+	height: 25px;
+	line-height: 25px;
+	display: inline-block;
+	vertical-align: top;
+}
+#add-order-time input
+{
+	width: 200px;
+	text-align: center;
+}
+#add-order-time
+{
+	margin-top: 20px;
+	height: 25px;
+}
+#add-order-phone input
+{
+	width: 500px;
+	padding-left: 10px;
+}
+#add-order-phone
+{
+	height: 25px;
+	margin-top: 20px;
+}
+#add-order-items .item input:first-child
+{
+	width: 350px;
+	padding-left: 20px;
+	margin-left: 10px;
+}
+#add-order-items .item input:nth-child(2n)
+{
+	width: 260px;
+	padding-left: 20px;
+	margin-left: 20px;
+}
+#add-order-items .item input
+{
+	margin-top: 15px;
+}
+#add-order-items .item .button-delete
+{
+	float: right;
+	width: 30px;
+	height: 30px;
+	margin: 10px 10px 0 0;
+	background-size: 30px;
+}
+#add-order-items .item
+{
+	background-color: @color-block;
+	position: relative;
+	top: 10px;
+	left: 10px;
+	margin-bottom: 10px;
+	height: 50px;
+	width: 740px;
+}
+#add-order-items
+{
+	height: 250px;
+	padding: 0 0 10px 0;
+	margin-top: 20px;
+	box-shadow: inset 0px 0 15px -5px #000;
+	background-color: @color-body;
+}
+#add-order-window .button-cancel:hover, #add-order-window .button-save:hover
+{
+	opacity: 1;
+}
+#add-order-window .button-cancel, #add-order-window .button-save
+{
+	opacity: 0.6;
+	width: 25px;
+	height: 25px;
+	background-size: 25px;
+	margin: 20px 0 0 10px;
+}
+#add-order-window .add-floating-button
+{
+	z-index: 3;
+	top: ~"calc(50% + 160px)";
+	left: 50%;
 }
