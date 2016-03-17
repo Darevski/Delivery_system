@@ -526,5 +526,56 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 {
 	z-index: 3;
 	top: ~"calc(50% + 160px)";
-	left: 50%;
+	left: ~"calc(50% - 25px)";
+}
+.ex-bg
+{
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 100;
+	background-color: @color-main-shadow;
+	opacity: 0;
+}
+.ex-bg, .ex-bg *
+{
+	transition: 0.5s;
+}
+.ex-block
+{
+	position: fixed;
+	top: ~"calc( 50% - 100px )";
+	left: ~"calc( 50% - 200px )";
+	width: 400px;
+	height: 200px;
+	box-shadow: 0 0 50px -5px #000;
+	display: table;
+	color: #000;
+}
+.ex-message
+{
+	display: table-cell;
+	vertical-align: middle;
+	width: 360px;
+	height: 180px;
+	padding: 10px 20px;
+	background-color: @color-block;
+	text-align: justify;
+	text-align-last: left;
+}
+.ex-button:hover
+{
+	color: @color-main;
+}
+.ex-button
+{
+	font-weight: bold;
+	position: absolute;
+	bottom: 15px;
+	right: 20px;
+	width: 30px;
+	background-color: transparent;
+	height: 30px;
+	line-height: 30px;
+	text-align: center;
 }
