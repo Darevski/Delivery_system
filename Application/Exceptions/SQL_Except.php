@@ -12,6 +12,6 @@ namespace Application\Exceptions;
  * SQL_Except class implements handle the SQL exception`s
  * @package Application\Exceptions
  */
-class SQL_Except{
+class SQL_Except extends Main_Except{
 
 }
