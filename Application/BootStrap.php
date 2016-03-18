@@ -30,6 +30,9 @@ try{
     $Route = new Core\Route();
     $Route->Start($route_result);
 }
+catch (Exceptions\UFO_Except $error){
+    echo $error->getMessage();
+}
 catch (Exceptions\SQL_Except $error){
     echo $error->getMessage();
 }

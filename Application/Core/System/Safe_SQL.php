@@ -79,7 +79,7 @@ class Safe_SQL {
     const RESULT_NUM = MYSQLI_NUM;
 
     /**
-     * @var Safe_SQL_module Singleton
+     * @var Safe_SQL Singleton
      */
     private static $instance = null;
     /**
