@@ -1,8 +1,8 @@
 window.onerror = function (message) {
-	CreateEx(message);
+	new Dialog(message);
 	console.error(message);
 }
-
+window.onload = DoOnLoad;
 /** Возвращает информацию из хранилища
 * @param {string} name Имя ключа в хранилище
 * @return {string} item В случае существования возвращает значение, иначе false
@@ -97,6 +97,7 @@ Request.prototype = {
 function Dialog(message)
 {
 	this.message = (message) ? message : "Что-то пошло не так";
+	this.create();
 }
 Dialog.prototype = {
 	DialogClear: function () {

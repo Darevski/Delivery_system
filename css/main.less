@@ -29,15 +29,17 @@ input[type="date"]::-webkit-calendar-picker-indicator
 input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin-button {
     display: none;
 }
-*
+*:not(ymaps):not(a)
 {
-	//font-family: "HelveticaLight";
 	font-family: 'Roboto', sans-serif;
 	font-size: 16px;
-	margin: 0;
-	padding: 0;
 	width: 100%;
 	height: 100%;
+}
+*
+{
+	margin: 0;
+	padding: 0;
 }
 #low-footer
 {
@@ -370,7 +372,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	background-color: lighten(@color-main, 5%);
 	width: 50px;
 	height: 50px;
-	position: fixed;
+	position: absolute;
 	left: 475px;
 	bottom: 75px;
 	background-image: url("./icons/plus.png");
@@ -578,4 +580,8 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	height: 30px;
 	line-height: 30px;
 	text-align: center;
+}
+ymaps iframe
+{
+	height: 24px;
 }
