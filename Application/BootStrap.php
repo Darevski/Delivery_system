@@ -31,7 +31,7 @@ try{
     $Route->Start($route_result);
 }
 catch (Exceptions\UFO_Except $error){
-    echo $error->getMessage();
+    $error->classification_error($error);
 }
 catch (Exceptions\SQL_Except $error){
     echo $error->getMessage();
