@@ -23,9 +23,11 @@ http_response_code($response['response_code']);
 
 <json style="display: <?php echo $response['display_view']; ?>">
     <?php echo $response['json']; ?>
-    <br>
-    <?php echo @$response['debug_message']; ?>
 </json>
+
+<div>
+<?php echo @$response['debug_message']; ?>
+</div>
 
 </body>
 </html>

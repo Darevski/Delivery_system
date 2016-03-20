@@ -34,13 +34,19 @@ class View {
      * integer 'response_code'
      */
     static function display_errors($data){
-        $data['json'] = self::get_json($data);
-        if (Config::get_instance()->get_build()['Build'] == 'Debug')
-            $data['display_view'] = 'block';
+        $response['title'] = $data['title'];
+        $response['message'] = $data['message'];
+        $response['response_code'] = $data['response_code'];
+        $response['json'] = self::get_json($response);
+        // if type of build is debug the output information is visible on the screen
+        if (Config::get_instance()->get_build()['Build'] == 'Debug') {
+            $response['debug_message'] = $data['debug_message'];
+            $response['display_view'] = 'block';
+        }
         else
-            $data['display_view'] = 'none';
+            $response['display_view'] = 'none';
 
-        self::display('Error_View.php',$data);
+        self::display('Error_View.php',$response);
     }
 
     /**
@@ -49,7 +55,7 @@ class View {
      */
     static function output_json($data){
         $response['json'] = self::get_json($data);
-        // if type of build is debug the output information is visible on the screen 
+        // if type of build is debug the output information is visible on the screen
         if (Config::get_instance()->get_build()['Build'] == 'Debug')
             $response['display_view'] = 'block';
         else
