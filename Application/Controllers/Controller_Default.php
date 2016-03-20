@@ -9,6 +9,7 @@
 namespace Application\Controllers;
 
 use Application\Core\Controller;
+use Application\Core\View;
 
 /**
  * Class Controller_Default Default controller who display Start page
@@ -17,6 +18,6 @@ use Application\Core\Controller;
 class Controller_Default extends Controller{
     // Display Start Page
     public function action_start(){
-        // Code which displays start page
+        View::display('index.html');
     }
 }
