@@ -29,6 +29,7 @@ class Model_Delivery_Points extends Model{
      * @return mixed array{
      * 'point_id' -  id point that we inserted into database
      * 'identifier_order' - identifier of full order by that point in database
+     * 'state' - information about execute 'success' - all is ok
      * }
      */
     public function add_empty_point(){
@@ -44,6 +45,8 @@ class Model_Delivery_Points extends Model{
         // get max value from identifier mask yyyymmdd#value
         foreach($today_points as &$value)
             $value = preg_replace('/.*#/',"",$value['identifier_order']);
+        unset ($value);
+
         if ( count($today_points) > 0 )
             $max_ind = max($today_points);
         else
@@ -61,8 +64,51 @@ class Model_Delivery_Points extends Model{
         $this->database->query("UNLOCK TABLES");
 
         // forming return array
-        $point_info['point_id']= $point_id;
-        $point_info['identifier_order'] = $identifier_order;
-        return $point_info;
+        $return_info['point_id']= $point_id;
+        $return_info['identifier_order'] = $identifier_order;
+        $return_info['state'] = 'success';
+        return $return_info;
+    }
+
+    /**
+     * @param $data mixed array with next values
+     * address{
+     *  string street
+     *  string house
+     *  string block
+     *  string entry
+     *  int flor
+     *  int flat
+     * }
+     * int(12) phone for example '375291234567'
+     * time {
+     *  start: "H:i:s"
+     *  end: "H:i:s"
+     * }
+     * unix timestamp delivery_date
+     * int point_id - Unique value (Points_ID) from database Delivery_Points
+     * @return array {state: information about execute 'success' - all is ok}
+     */
+    public function fill_empty_point($data){
+        // +-----------address----------------+
+        $street = $data['address']['street'];
+        $house = $data['address']['house'];
+        $corpus = $data['address']['block'];
+        $entry = $data['address']['entry'];
+        $floor= $data['address']['floor'];
+        $flat = $data['address']['flat'];
+        // ------------address-----------------
+        $phone_number = $data['phone'];
+        $time_start = date('H:i:s',strtotime($data['time']['start']));
+        $time_end = date('H:i:s',strtotime($data['time']['end']));
+        $delivery_Date = date('Ymd',$data['delivery_date']);
+        $point_id = $data['point_id'];
+
+        $update_point_query = "UPDATE Delivery_Points SET Street =?s, House=?s, Corps=?s,
+        Entry=?s,floor=?i,flat=?i,phone_number=?i,time_start=?s,time_end=?s,Delivery_Date=?s WHERE Point_ID=?i";
+        $this->database->query($update_point_query,$street,$house,$corpus,$entry,$floor,$flat,
+            $phone_number,$time_start,$time_end,$delivery_Date,$point_id);
+        $execution_result['state'] = 'success';
+        return $execution_result;
     }
 }
