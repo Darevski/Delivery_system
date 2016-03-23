@@ -33,7 +33,7 @@ class Config {
     /**
      * @var array database connect configuration
      */
-    private $database_config;
+    private $database_config = null;
 
     /**
      * build type 'Debug' on default
@@ -42,12 +42,18 @@ class Config {
     private $build = 'Debug';
 
     /**
+     * configuration for request to yandex.maps service
+     * @var null
+     */
+    private $yandex_unit = null;
+    /**
      * Parse Application\Config.ini on construct and put`s it into private variables
      */
     private function __construct(){
         $Config = parse_ini_file($_SERVER['DOCUMENT_ROOT'].'/Application/Config.ini',true);
         $this->database_config = $Config['Data_Base_config'];
         $this->build = $Config['Build'];
+        $this->yandex_unit  = $Config['Yandex Unit'];
     }
 
     /** cap for protection */
@@ -67,5 +73,13 @@ class Config {
      */
     public function get_build(){
         return $this->build;
+    }
+
+    /**
+     * return configuration information for request to yandex.maps service
+     * @return array
+     */
+    public function get_yandex_unit(){
+        return $this->yandex_unit;
     }
 }
