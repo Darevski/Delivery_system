@@ -82,11 +82,11 @@ Request.prototype = {
 							   }
 						}
 				}
-				catch (ex) { console.error(ex); CreateEx(ex.message); }
+				catch (ex) { console.error(ex); new Dialog(ex.message); }
 			}
 			this.noJSON ? xhr.send(this.body) : xhr.send("json_input=" + JSON.stringify(this.body));
 		}
-		catch (ex) { console.error(ex); CreateEx(ex.message); }
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	}
 }
 
@@ -106,7 +106,7 @@ Dialog.prototype = {
 			this.element.style.opacity = 0;
 			setTimeout(function () { _this.element.remove(); }, 500);
 		}
-		catch (ex) { console.error(ex); CreateEx(ex.message); }		
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
 	create: function () {
 		try {
@@ -135,10 +135,10 @@ Dialog.prototype = {
 				try {
 					_this.element.style.opacity = 1;
 				}
-				catch (ex) { console.error(ex); CreateEx(ex.message); }		
+				catch (ex) { console.error(ex); new Dialog(ex.message); }
 			}, 500);
 		}
-		catch (ex) { console.error(ex); CreateEx(ex.message); }		
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	}
 }
 /** Класс загрузчика - реализует PreLoader и управление им
@@ -197,7 +197,7 @@ PreLoader.prototype = {
 			setTimeout( function () { _this.loader.style.opacity = 1; }, 10);
 			setTimeout( function () { _this.inprogress(); }, 1000);
 		}
-		catch (ex) { console.error(ex); CreateEx(ex.message); }
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
 	purge: function () {
 		try {
@@ -205,6 +205,6 @@ PreLoader.prototype = {
 			var _this = this;
 			setTimeout( function () { _this.loader.remove() }, 500);
 		}
-		catch (ex) { console.error(ex); CreateEx(ex.message); }
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	}
 }
