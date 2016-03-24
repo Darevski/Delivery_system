@@ -10,6 +10,8 @@ namespace Application\Models;
 
 
 use Application\Core\Model;
+use Application\Exceptions\SQL_Except;
+use Application\Units\Yandex_Geo_Api;
 
 /**
  * Class Model_Delivery_Points Model include business logic for Points of Delivery
@@ -104,11 +106,28 @@ class Model_Delivery_Points extends Model{
         $delivery_Date = date('Ymd',$data['delivery_date']);
         $point_id = $data['point_id'];
 
-        $update_point_query = "UPDATE Delivery_Points SET Street =?s, House=?s, Corps=?s,
-        Entry=?s,floor=?i,flat=?i,phone_number=?i,time_start=?s,time_end=?s,Delivery_Date=?s WHERE Point_ID=?i";
-        $this->database->query($update_point_query,$street,$house,$corpus,$entry,$floor,$flat,
-            $phone_number,$time_start,$time_end,$delivery_Date,$point_id);
-        $execution_result['state'] = 'success';
+        // Use Yandex. Maps GeoCoder Unit
+        $yandex = new Yandex_Geo_Api();
+        $point_info = $yandex->SetGeoCode(sprintf("%s,%s",$street,$house))
+                             ->start_request()
+                             ->Get_Response()->getList_GEO_objects()[0];
+        //Get correctly street name from Yandex GeoCoder
+        $street = $point_info->getThoroughfareName();
+        $house = $point_info->getPremiseNumber();
+        //Get Geo coordinates
+        $latitude =$point_info->getLatitude();
+        $longitude = $point_info->getLongitude();
+
+        $update_point_query = "UPDATE Delivery_Points SET Street =?s, House=?s, Corps=?s,Entry=?s,floor=?i,flat=?i,
+              phone_number=?i,time_start=?s,time_end=?s,Delivery_Date=?s,Longitude=?s, Latitude=?s WHERE Point_ID=?i";
+
+        $result = $this->database->query($update_point_query,$street,$house,$corpus,$entry,$floor,$flat,
+            $phone_number,$time_start,$time_end,$delivery_Date,$longitude,$latitude,$point_id);
+
+        if ($result)
+            $execution_result['state'] = 'success';
+        else
+            throw new SQL_Except("Mysql error");
         return $execution_result;
     }
 }
