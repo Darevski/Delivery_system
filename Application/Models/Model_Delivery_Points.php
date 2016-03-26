@@ -10,6 +10,7 @@ namespace Application\Models;
 
 
 use Application\Core\Model;
+use Application\Exceptions\Model_Except;
 use Application\Exceptions\SQL_Except;
 use Application\Units\Yandex_Geo_Api;
 
@@ -90,8 +91,10 @@ class Model_Delivery_Points extends Model{
      * unix timestamp delivery_date
      * int point_id - Unique value (Points_ID) from database Delivery_Points
      * @return array {state: information about execute 'success' - all is ok}
+     * @throws Model_Except
      */
     public function fill_empty_point($data){
+
         // +-----------address----------------+
         $street = $data['address']['street'];
         $house = $data['address']['house'];
@@ -105,7 +108,8 @@ class Model_Delivery_Points extends Model{
         $time_end = date('H:i:s',strtotime($data['time']['end']));
         $delivery_Date = date('Ymd',$data['delivery_date']);
         $point_id = $data['point_id'];
-
+        if (!$this->isset_point($point_id))
+            throw new Model_Except("Точки доставки не существует");
         // Use Yandex. Maps GeoCoder Unit
         $yandex = new Yandex_Geo_Api();
         $point_info = $yandex->SetGeoCode(sprintf("%s,%s",$street,$house))
@@ -127,7 +131,36 @@ class Model_Delivery_Points extends Model{
         if ($result)
             $execution_result['state'] = 'success';
         else
-            throw new SQL_Except("Mysql error");
+            throw new Model_Except("Mysql error");
         return $execution_result;
+    }
+
+    /**
+     * Delete Delivery point and Orders related with from database
+     * @param integer $point_id
+     * @throws Model_Except
+     */
+    public function delete_point($point_id){
+        if (!$this->isset_point($point_id))
+            throw new Model_Except("Точки доставка не существует");
+        $delete_query = "DELETE FROM Delivery_Points WHERE Point_ID=?i LIMIT 1";
+        $result = $this->database->query($delete_query,$point_id);
+        if ($result)
+            $execution_result['state'] = 'success';
+        else
+            throw new Model_Except("Mysql error");
+        return $execution_result;
+    }
+
+    /**
+     * Check`s availability point in database
+     * @param $point_id
+     * @return bool
+     */
+    private function isset_point($point_id){
+        $query = "SELECT COUNT(*) FROM Delivery_Points WHERE Point_ID = ?i";
+        $result =  $this->database->query($query,$point_id);
+        $count = $this->database->numRows($result);
+        return ($count > 0) ? true : false;
     }
 }

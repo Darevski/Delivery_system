@@ -91,7 +91,32 @@ class Controller_Points extends Controller{
             View::output_json($result);
         }
         else
-            throw new UFO_Except('incorrect JSON values');
+            throw new UFO_Except('incorrect JSON values',400);
+    }
 
+    /**
+     *  Delete Delivery point with related orders from database
+     */
+    public function action_delete_point(){
+        $_POST['Json_input'] = '{"point_id":1}';
+        if (isset($_POST['Json_input'])){
+            $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
+            if (is_null($input_json))
+                throw new UFO_Except('Not valid JSON',400);
+        }
+        else throw new UFO_Except('Json_input not found',400);
+
+        // Secure input data
+        $data=$this->secure_array($input_json);
+        unset($input_json);
+        $key_map = array('point_id');
+        if ($this->check_array_keys($key_map,$data)){
+            $point_id = $data['point_id'];
+            // if all checks are successful we are call model method
+            $result =$this->Model_Points->delete_point($point_id);
+            View::output_json($result);
+        }
+        else
+            throw new UFO_Except('incorrect JSON values',400);
     }
 }
