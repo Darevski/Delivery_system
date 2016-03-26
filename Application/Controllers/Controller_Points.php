@@ -95,7 +95,9 @@ class Controller_Points extends Controller{
     }
 
     /**
-     *  Delete Delivery point with related orders from database
+     * Delete Delivery point with related orders from database
+     * Structure of Json_input{int point_id}
+     * @api 'Server/Points/delete_point'
      */
     public function action_delete_point(){
         $_POST['Json_input'] = '{"point_id":1}';
