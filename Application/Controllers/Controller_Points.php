@@ -135,7 +135,7 @@ class Controller_Points extends Controller{
      * @throws \Application\Exceptions\Model_Except
      */
     public function action_get_points_by_date(){
-        $_POST['Json_input'] = '{"delivery_date":145855604800}';
+        //$_POST['Json_input'] = '{"delivery_date":145855604800}';
         if (isset($_POST['Json_input'])){
             $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
             if (is_null($input_json))
@@ -151,6 +151,51 @@ class Controller_Points extends Controller{
             $delivery_date = $data['delivery_date'];
             // if all checks are successful we are call model method
             $result =$this->Model_Points->get_points_by_date($delivery_date);
+            View::output_json($result);
+        }
+        else
+            throw new UFO_Except('incorrect JSON values',400);
+    }
+
+    /**
+     * Output info about delivery point
+     * structure of Json_input {int point_id}
+     * structure of output 'point_info'{
+     *  float 'total_cost'
+     *  string 'identifier_order'
+     *  string 'street'
+     *  string 'house'
+     *  string 'block'
+     *  string 'entry'
+     *  integer 'floor'
+     *  integer 'flat'
+     *  float 'latitude'
+     *  float 'longitude'
+     *  integer 'phone_number' 12 digits
+     *  string 'time_start'
+     *  string 'time_end'
+     *  string 'delivery_date'
+     *  string 'order_date'
+     * }
+     * @throws UFO_Except
+     */
+    public function action_get_info_about_point(){
+        //$_POST['Json_input'] = '{"point_id":1}';
+        if (isset($_POST['Json_input'])){
+            $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
+            if (is_null($input_json))
+                throw new UFO_Except('Not valid JSON',400);
+        }
+        else throw new UFO_Except('Json_input not found',400);
+
+        // Secure input data
+        $data=$this->secure_array($input_json);
+        unset($input_json);
+        $key_map = array('point_id');
+        if ($this->check_array_keys($key_map,$data)){
+            $point_id = $data['point_id'];
+            // if all checks are successful we are call model method
+            $result =$this->Model_Points->get_info_about_point($point_id);
             View::output_json($result);
         }
         else
