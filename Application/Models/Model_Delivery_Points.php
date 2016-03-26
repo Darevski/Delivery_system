@@ -11,7 +11,6 @@ namespace Application\Models;
 
 use Application\Core\Model;
 use Application\Exceptions\Model_Except;
-use Application\Exceptions\SQL_Except;
 use Application\Units\Yandex_Geo_Api;
 
 /**
@@ -67,7 +66,7 @@ class Model_Delivery_Points extends Model{
         $this->database->query("UNLOCK TABLES");
 
         // forming return array
-        $return_info['point_id']= $point_id;
+        $return_info['point_id']= (int)$point_id;
         $return_info['identifier_order'] = $identifier_order;
         $return_info['state'] = 'success';
         return $return_info;
@@ -150,6 +149,26 @@ class Model_Delivery_Points extends Model{
         else
             throw new Model_Except("Mysql error");
         return $execution_result;
+    }
+
+    /**
+     * return list of all delivery point`s on selected date
+     * @param $date int in unix timestamp
+     * @return array(int) list of delivery point`s
+     */
+    public function get_points_by_date($date){
+        //convert unix timestamp to human format
+        $delivery_date = date('Ymd',$date);
+
+        $query = "SELECT Point_ID FROM Delivery_Points WHERE Delivery_Date=?s";
+        $result_of_query = $this->database->getAll($query,$delivery_date);
+
+        $result['point_id'] = array();
+        foreach ($result_of_query as $value)
+            $result['points_id'][] = (int)$value['Point_ID'];
+
+        $result['state'] = 'success';
+        return $result;
     }
 
     /**

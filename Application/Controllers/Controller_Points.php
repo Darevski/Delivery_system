@@ -61,6 +61,7 @@ class Controller_Points extends Controller{
      * int point_id - Unique value (Points_ID) from database Delivery_Points
      * @api 'server/Points/fill_empty_point'
      * @throws UFO_Except
+     * @throws \Application\Exceptions\Model_Except
      */
     public function action_fill_empty_point(){
         $_POST['Json_input'] = '{"address":
@@ -98,9 +99,11 @@ class Controller_Points extends Controller{
      * Delete Delivery point with related orders from database
      * Structure of Json_input{int point_id}
      * @api 'Server/Points/delete_point'
+     * @throws UFO_Except
+     * @throws \Application\Exceptions\Model_Except
      */
     public function action_delete_point(){
-        $_POST['Json_input'] = '{"point_id":1}';
+        //$_POST['Json_input'] = '{"point_id":1}';
         if (isset($_POST['Json_input'])){
             $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
             if (is_null($input_json))
@@ -116,6 +119,38 @@ class Controller_Points extends Controller{
             $point_id = $data['point_id'];
             // if all checks are successful we are call model method
             $result =$this->Model_Points->delete_point($point_id);
+            View::output_json($result);
+        }
+        else
+            throw new UFO_Except('incorrect JSON values',400);
+    }
+
+    /**
+     * Output list of all delivery point`s on selected date
+     * Structure of Json_input{
+     *  int unix timestamp 'delivery_date'
+     * }
+     * @api 'Server/Points/get_points_by_date'
+     * @throws UFO_Except
+     * @throws \Application\Exceptions\Model_Except
+     */
+    public function action_get_points_by_date(){
+        $_POST['Json_input'] = '{"delivery_date":145855604800}';
+        if (isset($_POST['Json_input'])){
+            $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
+            if (is_null($input_json))
+                throw new UFO_Except('Not valid JSON',400);
+        }
+        else throw new UFO_Except('Json_input not found',400);
+
+        // Secure input data
+        $data=$this->secure_array($input_json);
+        unset($input_json);
+        $key_map = array('delivery_date');
+        if ($this->check_array_keys($key_map,$data)){
+            $delivery_date = $data['delivery_date'];
+            // if all checks are successful we are call model method
+            $result =$this->Model_Points->get_points_by_date($delivery_date);
             View::output_json($result);
         }
         else
