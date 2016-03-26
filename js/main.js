@@ -74,17 +74,17 @@ Request.prototype = {
 									else
 										{
 											var ans = {};
-											ans.state = "fail";
-											ans.message = xhr.responseText;
+											ans.data.state = "fail";
+											ans.data.message = xhr.responseText;
 											console.error = xhr.response;
-											callback(ans);
+											callback(JSON.stringify(ans));
 										}
 							   }
 						}
 				}
 				catch (ex) { console.error(ex); new Dialog(ex.message); }
 			}
-			this.noJSON ? xhr.send(this.body) : xhr.send("json_input=" + JSON.stringify(this.body));
+			this.noJSON ? xhr.send(this.body) : xhr.send("Json_input=" + JSON.stringify(this.body));
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	}
