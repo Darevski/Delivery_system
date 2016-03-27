@@ -75,9 +75,6 @@ Point.prototype = {
 			
 			var _t2 = document.createElement("p");
 			_t2.setAttribute("class", "order-title");
-			_t2.innerHTML = this.address.street;
-			(!this.address.house) && (_t2.innerHTML += ", д." + this.address.house);
-			(!this.address.flat) && (_t2.innerHTML += ", кв. " + this.address.flat);
 			
 			_t1.appendChild(_t2);
 			_order.appendChild(_t1);
@@ -90,7 +87,6 @@ Point.prototype = {
 			_t2.setAttribute("placeholder", "Улица...");
 			_t2.setAttribute("class", "order-address-street");
 			_t2.setAttribute("disabled", "1");
-			(this.address.street) && (_t2.value = this.address.street);
 			_t1.appendChild(_t2);
 			
 			var _t2 = document.createElement("input");
@@ -98,7 +94,6 @@ Point.prototype = {
 			_t2.setAttribute("placeholder", "дом");
 			_t2.setAttribute("class", "order-address-house");
 			_t2.setAttribute("disabled", "1");
-			(this.address.house) && (_t2.value = this.address.house);
 			_t1.appendChild(_t2);
 			
 			var _t2 = document.createElement("input");
@@ -106,7 +101,6 @@ Point.prototype = {
 			_t2.setAttribute("placeholder", "корп.");
 			_t2.setAttribute("class", "order-address-block");
 			_t2.setAttribute("disabled", "1");
-			(this.address.block) && (_t2.value = this.address.block);
 			_t1.appendChild(_t2);
 			
 			var _t2 = document.createElement("input");
@@ -114,7 +108,6 @@ Point.prototype = {
 			_t2.setAttribute("placeholder", "под.");
 			_t2.setAttribute("class", "order-address-entry");
 			_t2.setAttribute("disabled", "1");
-			(this.address.entry) && (_t2.value = this.address.entry);
 			_t1.appendChild(_t2);
 			
 			var _t2 = document.createElement("input");
@@ -122,7 +115,6 @@ Point.prototype = {
 			_t2.setAttribute("placeholder", "этаж");
 			_t2.setAttribute("class", "order-address-floor");
 			_t2.setAttribute("disabled", "1");
-			(this.address.floor) && (_t2.value = this.address.floor);
 			_t1.appendChild(_t2);
 			
 			var _t2 = document.createElement("input");
@@ -130,7 +122,6 @@ Point.prototype = {
 			_t2.setAttribute("placeholder", "кв.");
 			_t2.setAttribute("class", "order-address-flat");
 			_t2.setAttribute("disabled", "1");
-			(this.address.flat) && (_t2.value = this.address.flat);
 			_t1.appendChild(_t2);
 			
 			var _t2 = document.createElement("div");
@@ -150,7 +141,6 @@ Point.prototype = {
 			_t3.setAttribute("class", "time-from");
 			_t3.setAttribute("type", "time");
 			_t3.setAttribute("disabled", "1");
-			(this.time.start) && (_t3.value = this.time.start);
 			_t2.appendChild(_t3);
 			
 			var _t3 = document.createElement("p");
@@ -163,7 +153,6 @@ Point.prototype = {
 			_t3.setAttribute("class", "time-to");
 			_t3.setAttribute("type", "time");
 			_t3.setAttribute("disabled", "1");
-			(this.time.end) && (_t3.value = this.time.end);
 			_t2.appendChild(_t3);
 			
 			_t1.appendChild(_t2);
@@ -179,7 +168,6 @@ Point.prototype = {
 			_t3.setAttribute("type", "tel");
 			_t3.setAttribute("placeholder", "телефон");
 			_t3.setAttribute("disabled", "1");
-			(this.phone) && (_t3.value = this.phone);
 			_t2.appendChild(_t3);
 			_t1.appendChild(_t2);
 			
@@ -187,10 +175,6 @@ Point.prototype = {
 			_t2.setAttribute("class", "order-items");
 			
 			var _t3 = document.createElement("p");
-			_t3.innerHTML = this.items.length;
-			(this.items.length == 1) && (_t3.innerHTML += " товар на сумму");
-			((this.items.length > 1) && (this.items.length < 5)) && (_t3.innerHTML += " товара на сумму");
-			((this.items.length == 0) || (this.items.length > 4)) && (_t3.innerHTML += " товаров на сумму");
 			_t2.appendChild(_t3);
 			_t1.appendChild(_t2);
 			
@@ -211,6 +195,7 @@ Point.prototype = {
 			_order.appendChild(_t1);
 			
 			this.Object = _order;
+			this.fill();
 			this.Object.style.marginLeft = "-600px";
 			this.Object.style.height = "0px";
 			document.getElementById("orderlist").appendChild(this.Object);
@@ -305,13 +290,8 @@ Point.prototype = {
 						var answer = JSON.parse(Response);
 						if (answer.data.state == "success")
 							{
-								/* TODO Load fn */
-								_this.address = _body.address;
-								_this.time.start = _body.time.start;
-								_this.time.end = _body.time.end;
-								_this.phone = _body.phone;
+								_this.load();
 								document.getElementById("edit-order").style.opacity = "0";
-								_this.create(); // TODO loadIntoBlock
 								setTimeout(function () { document.getElementById("edit-order").remove(); delVar("pending"); }, 550);
 							}
 						else
@@ -403,6 +383,9 @@ Point.prototype = {
 
 							_this.coordinates.longtitude = answer.data.point_info.longtitude;
 							_this.coordinates.latitude = answer.data.point_info.latitude;
+							
+							(_this.isAdded) && (_this.fill());
+							(!_this.isAdded) && (_this.create());
 						}
 					else
 						new Dialog(answer.data.message);
@@ -436,8 +419,13 @@ Point.prototype = {
 			(this.phone) && (this.Object.getElementsByTagName("input")[8].value = this.phone);
 			
 			var block = this.Object.getElementsByClassName("order-items")[0].children[0];
-			block.innerHTML = this.items.length + " на сумму ";
-			(this.totalcost) && (block.innerHTML += this.totalcost);
+			block.innerHTML = this.items.length;
+
+			(this.items.length == 1) && (block.innerHTML += " товар на сумму ");
+			((this.items.length > 1) && (this.items.length < 5)) && (block.innerHTML += " товара на сумму ");
+			((this.items.length == 0) || (this.items.length > 4)) && (block.innerHTML += " товаров на сумму ");
+			
+			(this.totalcost != void(0)) && (block.innerHTML += this.totalcost);
 			
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
