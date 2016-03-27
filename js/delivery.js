@@ -42,7 +42,6 @@ function Point()
 	this.isAdded = false;
 	this.map_id = null;
 	this.uniq = null;
-	this.point_id = Point.length;
 	
 	this.coordinates = {
 		longtitude: null,
@@ -350,7 +349,7 @@ Point.prototype = {
 											_this.Object.style.padding = "0";
 											setTimeout(function () {
 												_this.Object.remove();
-												Points.splice(_this.point_id,1);
+												Points.splice(Points.indexOf(_this),1);
 											}, 550);
 										}, 550);
 									}
@@ -376,7 +375,73 @@ Point.prototype = {
 				PointDelete(_this);
         }
         catch (ex) { console.error(ex); new Dialog(ex.message); }
-    }
+    },
+	load: function () {
+		try {
+			var body = {};
+			var _this = this;
+			body.point_id = this.id;
+			var req = new Request("/Points/get_info_about_point", body);
+			req.callback = function (Response) {
+				try {
+					var answer = JSON.parse(Response);
+					if (answer.data.state == "success")
+						{
+							_this.address.street = answer.data.point_info.street;
+							_this.address.house = answer.data.point_info.house;
+							_this.address.block = answer.data.point_info.block;
+							_this.address.entry = answer.data.point_info.entry;
+							_this.address.floor = answer.data.point_info.floor;
+							_this.address.flat = answer.data.point_info.flat;
+
+							_this.time.start = answer.data.point_info.time_start;
+							_this.time.end = answer.data.point_info.time_end;
+
+							_this.phone = answer.data.point_info.phone_number;
+
+							_this.totalcost = answer.data.point_info.total_cost;
+
+							_this.coordinates.longtitude = answer.data.point_info.longtitude;
+							_this.coordinates.latitude = answer.data.point_info.latitude;
+						}
+					else
+						new Dialog(answer.data.message);
+				}
+				catch (ex) { console.error(ex); new Dialog(ex.message); }
+			}
+			req.do();
+		}
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
+	},
+	fill: function () {
+		try {
+			var block = this.Object.getElementsByClassName("order-title")[0];
+			block.innerHTML = "";
+			
+			(this.map_id) && (block.innerHTML += this.map_id + ". ");
+			(this.address.street) && (block.innerHTML += this.address.street);
+			(this.address.house) && (block.innerHTML += ", д. " + this.address.house);
+			(this.address.flat) && (block.innerHTML += ", кв. " + this.address.flat);
+			
+			(this.address.street) && (this.Object.getElementsByClassName("order-address-street")[0].value = this.address.street);
+			(this.address.house)  &&  (this.Object.getElementsByClassName("order-address-house")[0].value = this.address.house);
+			(this.address.block)  &&  (this.Object.getElementsByClassName("order-address-block")[0].value = this.address.block);
+			(this.address.entry)  &&  (this.Object.getElementsByClassName("order-address-entry")[0].value = this.address.entry);
+			(this.address.floor)  &&  (this.Object.getElementsByClassName("order-address-floor")[0].value = this.address.floor);
+			(this.address.flat)   &&   (this.Object.getElementsByClassName("order-address-flat")[0].value = this.address.flat);
+			
+			(this.time.start) && (this.Object.getElementsByClassName("time-from")[0].value = this.time.start);
+			(this.time.end) && (this.Object.getElementsByClassName("time-to")[0].value = this.time.end);
+			
+			(this.phone) && (this.Object.getElementsByTagName("input")[8].value = this.phone);
+			
+			var block = this.Object.getElementsByClassName("order-items")[0].children[0];
+			block.innerHTML = this.items.length + " на сумму ";
+			(this.totalcost) && (block.innerHTML += this.totalcost);
+			
+		}
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
+	}
 }
 
 function PreparePoint()

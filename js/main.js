@@ -149,7 +149,7 @@ Dialog.prototype = {
 */
 function PreLoader(block)
 {
-	this.fullscreen = true;
+	this.fullscreen = (block) ? false : true;
 	this.transparent = false;
 	this.loader = null;
 	this.block = (block) ? block : document.body;
@@ -161,7 +161,6 @@ PreLoader.prototype = {
 		try {
 			this.loader = document.createElement("div");
 			this.loader.style.opacity = 0;
-			this.loader.style.transition = "1s";
 
 			if (this.fullscreen)
 				{
