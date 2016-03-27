@@ -42,6 +42,7 @@ function Point()
 	this.isAdded = false;
 	this.map_id = null;
 	this.uniq = null;
+	this.point_id = Point.length;
 	
 	this.coordinates = {
 		longtitude: null,
@@ -187,10 +188,10 @@ Point.prototype = {
 			_t2.setAttribute("class", "order-items");
 			
 			var _t3 = document.createElement("p");
-			_t3.innerHTML = this.items.count;
-			(this.items.count == 1) && (_t3.innerHTML += " товар на сумму");
-			((this.items.count > 1) && (this.items.count < 5)) && (_t3.innerHTML += " товара на сумму");
-			(this.items.count > 4) && (_t3.innerHTML += " товаров на сумму");
+			_t3.innerHTML = this.items.length;
+			(this.items.length == 1) && (_t3.innerHTML += " товар на сумму");
+			((this.items.length > 1) && (this.items.length < 5)) && (_t3.innerHTML += " товара на сумму");
+			((this.items.length == 0) || (this.items.length > 4)) && (_t3.innerHTML += " товаров на сумму");
 			_t2.appendChild(_t3);
 			_t1.appendChild(_t2);
 			
@@ -199,7 +200,7 @@ Point.prototype = {
 			
 			var _t3 = document.createElement("div");
 			_t3.setAttribute("class", "button-delete");
-			_t3.onclick = function () { new Dialog("Удаление заказа еще недоступно"); }
+			_t3.onclick = function () { _this.delete(); }
 			_t2.appendChild(_t3);
 			
 			var _t3 = document.createElement("div");
@@ -258,9 +259,18 @@ Point.prototype = {
 					el.children[2].onclick = function () { this.parentNode.remove(); }
 					document.getElementById("edit-order-items").appendChild(el);
 			}
-			_temp.getElementsByClassName("button-cancel")[0].onclick = function () { this.parentNode.parentNode.remove(); }
+			_temp.getElementsByClassName("button-cancel")[0].onclick = function () {
+                if (_this.isAdded)
+                    {
+                        this.parentNode.parentNode.style.opacity = "0";
+                        var _t = this;
+                        setTimeout(function () { _t.parentNode.parentNode.remove(); }, 550);
+                    }
+                else
+                    _this.delete();
+            }
 			_temp.getElementsByClassName("button-save")[0].onclick = function () { _this.save(); }
-			_temp.style.opacity = 0;
+			_temp.style.opacity = "0";
 			document.body.appendChild(_temp);
 			_temp.style.opacity = "";
         }
@@ -302,7 +312,7 @@ Point.prototype = {
 								_this.time.end = _body.time.end;
 								_this.phone = _body.phone;
 								document.getElementById("edit-order").style.opacity = "0";
-								_this.create();
+								_this.create(); // TODO loadIntoBlock
 								setTimeout(function () { document.getElementById("edit-order").remove(); delVar("pending"); }, 550);
 							}
 						else
@@ -314,7 +324,59 @@ Point.prototype = {
 			}
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
-	}
+	},
+    delete: function () {
+        try {
+			function PointDelete(_this) {
+				try {
+					var t = {};
+					t.point_id = _this.id;
+					var req = new Request("/Points/delete_point", t);
+					req.callback = function (Response) {
+						try {
+							var answer = JSON.parse(Response);
+							if (answer.data.state == "success")
+								{
+									var block = document.getElementById("edit-order");
+									if (block) {
+										block.style.opacity = "0";
+										setTimeout(function () { block.remove(); }, 550);
+									}
+									if (_this.isAdded) {
+										_this.Object.style.marginLeft = "-600px";
+										setTimeout(function () {
+											_this.Object.style.height = "0px"; 
+											_this.Object.style.margin = "-20px 0 0 -600px";
+											_this.Object.style.padding = "0";
+											setTimeout(function () {
+												_this.Object.remove();
+												Points.splice(_this.point_id,1);
+											}, 550);
+										}, 550);
+									}
+									else {
+										Points.splice(_this.point_id,1);
+									}
+								}
+							else
+								new Dialog(answer.data.message);
+						}
+						catch (ex) { console.error(ex); new Dialog(ex.message); }
+					}
+					req.do();
+				}
+				catch (ex) { console.error(ex); new Dialog(ex.message); }
+			}
+			var _this = this;
+			if (this.isOpen) {
+				this.toggle();
+				setTimeout(PointDelete, 500, _this);
+			}
+			else
+				PointDelete(_this);
+        }
+        catch (ex) { console.error(ex); new Dialog(ex.message); }
+    }
 }
 
 function PreparePoint()
