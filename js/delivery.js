@@ -3,7 +3,9 @@ var Points = [];
 function DoOnLoad()
 {
 	document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
+	document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
 	delVar("pending");
+	loadPoints();
     ymaps.ready(init);
     var myMap;
 
@@ -322,16 +324,7 @@ Point.prototype = {
 										setTimeout(function () { block.remove(); }, 550);
 									}
 									if (_this.isAdded) {
-										_this.Object.style.marginLeft = "-600px";
-										setTimeout(function () {
-											_this.Object.style.height = "0px"; 
-											_this.Object.style.margin = "-20px 0 0 -600px";
-											_this.Object.style.padding = "0";
-											setTimeout(function () {
-												_this.Object.remove();
-												Points.splice(Points.indexOf(_this),1);
-											}, 550);
-										}, 550);
+										_this.deleteLocal();
 									}
 									else {
 										Points.splice(_this.point_id,1);
@@ -429,6 +422,24 @@ Point.prototype = {
 			
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
+	},
+	deleteLocal: function () {
+		try {
+			if (this.isAdded) {
+				var _this = this;
+				this.Object.style.marginLeft = "-600px";
+				setTimeout(function () {
+					_this.Object.style.height = "0px";
+					_this.Object.style.margin = "-20px 0 0 -600px";
+					_this.Object.style.padding = "0";
+					setTimeout(function () {
+						_this.Object.remove();
+						Points.splice(Points.indexOf(_this),1);
+					}, 550);
+				}, 500);
+			}
+		}
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	}
 }
 
@@ -460,6 +471,38 @@ function PreparePoint()
 				}
 				query.do();
 			}
+	}
+	catch (ex) { console.error(ex); new Dialog(ex.message); }
+}
+
+function loadPoints()
+{
+	try {
+		for (var i = 0; i < Points.length; i++)
+			Points[i].deleteLocal();
+		var day = new Date(document.querySelector('#store-date > input[type="date"]').value);
+		var body = { delivery_date: day.getTime() / 1000 }
+		var req = new Request("Points/get_points_by_date", body);
+		req.callback = function (Response) {
+			try {
+				var answer = JSON.parse(Response);
+				if (answer.data.state == "success")
+					{
+						if (answer.data.points_id)
+							for (var i = 0; i < answer.data.points_id.length; i++)
+								{
+									var t = new Point();
+									t.id = answer.data.points_id[i];
+									t.load();
+									Points.push(t);
+								}
+					}
+				else
+					new Dialog(answer.data.message);
+			}
+			catch (ex) { console.error(ex); new Dialog(ex.message); }
+		}
+		req.do();
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
