@@ -44,7 +44,7 @@ class Controller_Orders extends Controller{
      * @throws UFO_Except
      */
     public function action_add_order(){
-        $_POST['Json_input'] = '{"point_id":1,"description":"Товар №3","cost":252.234}';
+        //$_POST['Json_input'] = '{"point_id":1,"description":"Товар №3","cost":252.234}';
         if (isset($_POST['Json_input'])){
             $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
             if (is_null($input_json))
@@ -66,6 +66,69 @@ class Controller_Orders extends Controller{
     }
 
     /**
+     * Delete Order from DataBase
+     * Structure of Json_input{ int 'order_id' }
+     * @api 'Server/Orders/delete_order'
+     * @throws UFO_Except
+     * @throws \Application\Exceptions\Model_Except
+     */
+    public function action_delete_order(){
+        //$_POST['Json_input'] = '{"order_id":1}';
+        if (isset($_POST['Json_input'])){
+            $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
+            if (is_null($input_json))
+                throw new UFO_Except('Not valid JSON',400);
+        }
+        else throw new UFO_Except('Json_input not found',400);
+
+        // Secure input data
+        $data=$this->secure_array($input_json);
+        unset($input_json);
+        $key_map = array('order_id');
+        if ($this->check_array_keys($key_map,$data)){
+            $order_id = $data['order_id'];
+            // if all checks are successful we are call model method
+            $result =$this->Model_orders->delete_order($order_id);
+            View::output_json($result);
+        }
+        else
+            throw new UFO_Except('incorrect JSON values',400);
+    }
+
+    /**
+     * Update order parameters in database
+     * structure of Json_input{
+     *  int order_id
+     *  string description
+     *  float cost
+     * }
+     * @api 'Server/Orders/update_order'
+     * @throws UFO_Except
+     * @throws \Application\Exceptions\Model_Except
+     */
+    public function action_update_order(){
+        //$_POST['Json_input'] = '{"order_id":1,"description":"Описание №1","cost":250}';
+        if (isset($_POST['Json_input'])){
+            $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
+            if (is_null($input_json))
+                throw new UFO_Except('Not valid JSON',400);
+        }
+        else throw new UFO_Except('Json_input not found',400);
+
+        // Secure input data
+        $data=$this->secure_array($input_json);
+        unset($input_json);
+        $key_map = array('order_id','cost','description');
+        if ($this->check_array_keys($key_map,$data)){
+            // if all checks are successful we are call model method
+            $result =$this->Model_orders->update_order($data);
+            View::output_json($result);
+        }
+        else
+            throw new UFO_Except('incorrect JSON values',400);
+    }
+
+    /**
      * Output list orders of selected delivery point
      * structure of Json_input { int Point_id }
      * structure of output:
@@ -75,7 +138,7 @@ class Controller_Orders extends Controller{
      * @throws UFO_Except
      */
     public function action_get_list_orders_by_point_id(){
-        $_POST['Json_input'] = '{"point_id":1}';
+        //$_POST['Json_input'] = '{"point_id":1}';
         if (isset($_POST['Json_input'])){
             $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
             if (is_null($input_json))

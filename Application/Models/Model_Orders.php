@@ -60,4 +60,45 @@ class Model_Orders extends Model{
         $result['state'] = 'success';
         return $result;
     }
+
+    /**
+     * Delete Order From DataBase
+     * @param $order_id
+     * @return mixed
+     * @throws Model_Except
+     */
+    public function delete_order($order_id){
+        $delete_query = "DELETE FROM Orders WHERE Order_ID = ?i";
+        $result = $this->database->query($delete_query,$order_id);
+        if ($result)
+            $execution_result['state'] = 'success';
+        else
+            throw new Model_Except("Mysql error");
+        return $execution_result;
+    }
+
+    /**
+     * Update Order parameters in Database
+     * @param $data{
+     *  integer order_id
+     *  string description
+     *  float cost
+     * }
+     * @return mixed
+     * @throws Model_Except
+     */
+    public function update_order($data){
+        $order_id = $data['order_id'];
+        $description = $data['description'];
+        $cost = $data['cost'];
+
+        $update_query = "UPDATE Orders SET Description=?s,Cost=?s WHERE Order_ID=?i";
+        $result = $this->database->query($update_query,$description,$cost,$order_id);
+
+        if ($result)
+            $execution_result['state'] = 'success';
+        else
+            throw new Model_Except("Mysql error");
+        return $execution_result;
+    }
 }
