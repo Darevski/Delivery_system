@@ -64,4 +64,36 @@ class Controller_Orders extends Controller{
         else
             throw new UFO_Except('incorrect JSON values',400);
     }
+
+    /**
+     * Output list orders of selected delivery point
+     * structure of Json_input { int Point_id }
+     * structure of output:
+     * orders[ { integer 'order_id', string 'description', integer 'cost'} ]
+     *
+     * @api 'Server/Orders/get_list_orders_by_point_id'
+     * @throws UFO_Except
+     */
+    public function action_get_list_orders_by_point_id(){
+        $_POST['Json_input'] = '{"point_id":1}';
+        if (isset($_POST['Json_input'])){
+            $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
+            if (is_null($input_json))
+                throw new UFO_Except('Not valid JSON',400);
+        }
+        else throw new UFO_Except('Json_input not found',400);
+
+        // Secure input data
+        $data=$this->secure_array($input_json);
+        unset($input_json);
+        $key_map = array('point_id');
+        if ($this->check_array_keys($key_map,$data)){
+            $point_id = $data['point_id'];
+            // if all checks are successful we are call model method
+            $result =$this->Model_orders->get_list_orders_by_point_id($point_id);
+            View::output_json($result);
+        }
+        else
+            throw new UFO_Except('incorrect JSON values',400);
+    }
 }

@@ -38,4 +38,26 @@ class Model_Orders extends Model{
             throw new Model_Except("Mysql error");
         return $execution_result;
     }
+
+    /**
+     * Return list of orders for selected delivery point
+     * @param $point_id
+     * @return mixed
+     * orders[
+     * { integer 'order_id', string 'description', integer 'cost'}
+     * ]
+     */
+    public function get_list_orders_by_point_id($point_id){
+        $query = "SELECT order_id,description,cost FROM Orders WHERE Point_ID=?i";
+        $result_query = $this->database->getAll($query,$point_id);
+
+        foreach ($result_query as &$value){
+            settype($value['order_id'],"integer");
+            settype($value['cost'],"integer");
+        }
+
+        $result['orders'] = $result_query;
+        $result['state'] = 'success';
+        return $result;
+    }
 }
