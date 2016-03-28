@@ -46,9 +46,9 @@ class Controller_Points extends Controller{
      * Structure of JSON_Input
      * address{
      *  string street
-     *  string house
-     *  string block
+     *  string house - house with block for ex. 'Рафиева 83к1' or 'Рафиева 113'
      *  string entry
+     *  string note
      *  int flor
      *  int flat
      * }
@@ -63,15 +63,15 @@ class Controller_Points extends Controller{
      * @throws UFO_Except
      * @throws \Application\Exceptions\Model_Except
      */
-    public function action_fill_empty_point(){
-        $_POST['Json_input'] = '{"address":
-                                {"street":"ул. Рафиева","house":"113","block":null,"entry":"5","floor":4,"flat":159},
-                                 "point_id":1,
+    public function action_fill_point(){
+       /* $_POST['Json_input'] = '{"address":
+                                {"street":"ул. Рафиева","house":"113","entry":"5","floor":4,"flat":159},
+                                 "point_id":2, "note":"Нерабочий домофон",
                                  "time":{"start":"18:00:00","end":"20:15:00"},
                                  "phone":375297768637,
                                  "delivery_date":1458604800
                                  }';
-
+        */
         if (isset($_POST['Json_input'])){
             $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
             if (is_null($input_json))
@@ -84,11 +84,11 @@ class Controller_Points extends Controller{
         unset($input_json);
 
         // Check availability array keys
-        $key_map = array('address','street','house','block','entry','floor','flat','point_id','time',
+        $key_map = array('address','street','house','note','entry','floor','flat','point_id','time',
             'start','end','phone');
         if ($this->check_array_keys($key_map,$data)){
             // if all checks are successful we are call model method
-            $result =$this->Model_Points->fill_empty_point($data);
+            $result =$this->Model_Points->fill_point($data);
             View::output_json($result);
         }
         else
@@ -180,7 +180,7 @@ class Controller_Points extends Controller{
      * @throws UFO_Except
      */
     public function action_get_info_about_point(){
-        //$_POST['Json_input'] = '{"point_id":1}';
+        $_POST['Json_input'] = '{"point_id":2}';
         if (isset($_POST['Json_input'])){
             $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
             if (is_null($input_json))

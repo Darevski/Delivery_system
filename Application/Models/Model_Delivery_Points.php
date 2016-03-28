@@ -77,7 +77,7 @@ class Model_Delivery_Points extends Model{
      * address{
      *  string street
      *  string house
-     *  string block
+     *  string note
      *  string entry
      *  int flor
      *  int flat
@@ -92,21 +92,22 @@ class Model_Delivery_Points extends Model{
      * @return array {state: information about execute 'success' - all is ok}
      * @throws Model_Except
      */
-    public function fill_empty_point($data){
+    public function fill_point($data){
 
         // +-----------address----------------+
         $street = $data['address']['street'];
         $house = $data['address']['house'];
-        $corpus = $data['address']['block'];
         $entry = $data['address']['entry'];
         $floor= $data['address']['floor'];
         $flat = $data['address']['flat'];
         // ------------address-----------------
         $phone_number = $data['phone'];
+        $note = $data['note'];
         $time_start = date('H:i:s',strtotime($data['time']['start']));
         $time_end = date('H:i:s',strtotime($data['time']['end']));
         $delivery_Date = date('Ymd',$data['delivery_date']);
         $point_id = $data['point_id'];
+
         if (!$this->isset_point($point_id))
             throw new Model_Except("Точки доставки не существует");
         // Use Yandex. Maps GeoCoder Unit
@@ -121,10 +122,10 @@ class Model_Delivery_Points extends Model{
         $latitude =$point_info->getLatitude();
         $longitude = $point_info->getLongitude();
 
-        $update_point_query = "UPDATE Delivery_Points SET Street =?s, House=?s, Corps=?s,Entry=?s,floor=?i,flat=?i,
+        $update_point_query = "UPDATE Delivery_Points SET Street =?s, House=?s, Note=?s,Entry=?s,floor=?i,flat=?i,
               phone_number=?i,time_start=?s,time_end=?s,Delivery_Date=?s,Longitude=?s, Latitude=?s WHERE Point_ID=?i";
 
-        $result = $this->database->query($update_point_query,$street,$house,$corpus,$entry,$floor,$flat,
+        $result = $this->database->query($update_point_query,$street,$house,$note,$entry,$floor,$flat,
             $phone_number,$time_start,$time_end,$delivery_Date,$longitude,$latitude,$point_id);
 
         if ($result)
@@ -163,7 +164,7 @@ class Model_Delivery_Points extends Model{
         $query = "SELECT Point_ID FROM Delivery_Points WHERE Delivery_Date=?s";
         $result_of_query = $this->database->getAll($query,$delivery_date);
 
-        $result['point_id'] = array();
+        $result['points_id'] = array();
         foreach ($result_of_query as $value)
             $result['points_id'][] = (int)$value['Point_ID'];
 
@@ -178,7 +179,7 @@ class Model_Delivery_Points extends Model{
      *  string 'identifier_order'
      *  string 'street'
      *  string 'house'
-     *  string 'block'
+     *  string 'note'
      *  string 'entry'
      *  integer 'floor'
      *  integer 'flat'
@@ -198,12 +199,13 @@ class Model_Delivery_Points extends Model{
         if (!$this->isset_point($point_id))
             throw new Model_Except("Точки доставка не существует");
 
-        $query = "SELECT total_cost,identifier_order,street,house,corps as block,entry,floor,flat,latitude,longitude,
+        $query = "SELECT total_cost,identifier_order,street,house,note,entry,floor,flat,latitude,longitude,
                 phone_number,time_start,time_end,delivery_Date,order_Date FROM Delivery_Points WHERE Point_ID=?i";
         $result_of_query = $this->database->getRow($query,$point_id);
         //conversion output types
         settype($result_of_query['total_cost'],"float");
         settype($result_of_query['floor'],"integer");
+        settype($result_of_query['flat'],"integer");
         settype($result_of_query['latitude'],"float");
         settype($result_of_query['longitude'],"float");
         settype($result_of_query['phone_number'],"integer");
