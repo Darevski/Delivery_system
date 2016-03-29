@@ -97,14 +97,7 @@ Point.prototype = {
 			_t2.setAttribute("class", "order-address-house");
 			_t2.setAttribute("disabled", "1");
 			_t1.appendChild(_t2);
-			
-			var _t2 = document.createElement("input");
-			_t2.setAttribute("type", "text");
-			_t2.setAttribute("placeholder", "корп.");
-			_t2.setAttribute("class", "order-address-block");
-			_t2.setAttribute("disabled", "1");
-			_t1.appendChild(_t2);
-			
+		
 			var _t2 = document.createElement("input");
 			_t2.setAttribute("type", "text");
 			_t2.setAttribute("placeholder", "под.");
@@ -211,19 +204,18 @@ Point.prototype = {
 			var _this = this;
 			var _temp = document.createElement("div");
 			_temp.setAttribute("id", "edit-order");
-			_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="корп." id="edit-order-address-block"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
+			_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
 			_temp.getElementsByTagName("p")[0].innerHTML = this.uniq;
 			(this.address.street) && (_temp.getElementsByTagName("input")[0].value = this.address.street);
 			(this.address.house)  && (_temp.getElementsByTagName("input")[1].value = this.address.house);
-			(this.address.block)  && (_temp.getElementsByTagName("input")[2].value = this.address.block);
-			(this.address.entry)  && (_temp.getElementsByTagName("input")[3].value = this.address.entry);
-			(this.address.floor)  && (_temp.getElementsByTagName("input")[4].value = this.address.floor);
-			(this.address.flat)   && (_temp.getElementsByTagName("input")[5].value = this.address.flat);
+			(this.address.entry)  && (_temp.getElementsByTagName("input")[2].value = this.address.entry);
+			(this.address.floor)  && (_temp.getElementsByTagName("input")[3].value = this.address.floor);
+			(this.address.flat)   && (_temp.getElementsByTagName("input")[4].value = this.address.flat);
 			
 			(this.time.start) && (_temp.getElementsByClassName("time-from")[0].value = this.time.start);
 			(this.time.end)   && (_temp.getElementsByClassName("time-to")[0].value = this.time.end);
 			
-			(this.phone) && (_temp.getElementsByTagName("input")[8].value = this.phone);
+			(this.phone) && (_temp.getElementsByTagName("input")[7].value = this.phone);
 			
 			for (var i = 0; i < this.items.length + 1; i++)
 				{
@@ -271,7 +263,6 @@ Point.prototype = {
 				body.address = {};
 				body.address.street = (document.getElementById("edit-order-address-street").value) ? document.getElementById("edit-order-address-street").value : null;
 				body.address.house = (document.getElementById("edit-order-address-house").value) ? document.getElementById("edit-order-address-house").value : null;
-				body.address.block = (document.getElementById("edit-order-address-block").value) ? document.getElementById("edit-order-address-block").value : null;
 				body.address.entry = (document.getElementById("edit-order-address-entry").value) ? document.getElementById("edit-order-address-entry").value : null;
 				body.address.floor = (document.getElementById("edit-order-address-floor").value) ? parseInt(document.getElementById("edit-order-address-floor").value) : null;
 				body.address.flat = (document.getElementById("edit-order-address-flat").value) ? parseInt(document.getElementById("edit-order-address-flat").value) : null;
@@ -285,8 +276,8 @@ Point.prototype = {
 				body.phone = (document.querySelector('#edit-order-phone > input[type="tel"]').value) ? parseInt(document.querySelector('#edit-order-phone > input[type="tel"]').value) : null;
 				var _t = new Date(document.querySelector('#store-date > input[type="date"]').value);
 				body.delivery_date = parseInt(_t.getTime() / 1000);
-
-				var req = new Request("/Points/fill_empty_point", body);
+				body.note = "TODO"; /* TODO: примечание */
+				var req = new Request("/Points/fill_point", body);
 				req.callback = function (Response) {
 					try {
 						var answer = JSON.parse(Response);
@@ -362,7 +353,6 @@ Point.prototype = {
 						{
 							_this.address.street = answer.data.point_info.street;
 							_this.address.house = answer.data.point_info.house;
-							_this.address.block = answer.data.point_info.block;
 							_this.address.entry = answer.data.point_info.entry;
 							_this.address.floor = answer.data.point_info.floor;
 							_this.address.flat = answer.data.point_info.flat;
@@ -401,7 +391,6 @@ Point.prototype = {
 			
 			(this.address.street) && (this.Object.getElementsByClassName("order-address-street")[0].value = this.address.street);
 			(this.address.house)  &&  (this.Object.getElementsByClassName("order-address-house")[0].value = this.address.house);
-			(this.address.block)  &&  (this.Object.getElementsByClassName("order-address-block")[0].value = this.address.block);
 			(this.address.entry)  &&  (this.Object.getElementsByClassName("order-address-entry")[0].value = this.address.entry);
 			(this.address.floor)  &&  (this.Object.getElementsByClassName("order-address-floor")[0].value = this.address.floor);
 			(this.address.flat)   &&   (this.Object.getElementsByClassName("order-address-flat")[0].value = this.address.flat);
@@ -409,7 +398,7 @@ Point.prototype = {
 			(this.time.start) && (this.Object.getElementsByClassName("time-from")[0].value = this.time.start);
 			(this.time.end) && (this.Object.getElementsByClassName("time-to")[0].value = this.time.end);
 			
-			(this.phone) && (this.Object.getElementsByTagName("input")[8].value = this.phone);
+			(this.phone) && (this.Object.getElementsByTagName("input")[7].value = this.phone);
 			
 			var block = this.Object.getElementsByClassName("order-items")[0].children[0];
 			block.innerHTML = this.items.length;
