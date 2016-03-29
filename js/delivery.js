@@ -250,7 +250,7 @@ Point.prototype = {
 			_temp.getElementsByClassName("button-save")[0].onclick = function () { _this.save(); }
 			_temp.style.opacity = "0";
 			document.body.appendChild(_temp);
-			_temp.style.opacity = "";
+			setTimeout(function () { _temp.style.opacity = ""; }, 10);
         }
         catch (ex) { console.error(ex); new Dialog(ex.message); }
     },
