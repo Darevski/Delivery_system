@@ -217,29 +217,87 @@ Point.prototype = {
 			
 			(this.phone) && (_temp.getElementsByTagName("input")[7].value = this.phone);
 			
-			for (var i = 0; i < this.items.length + 1; i++)
+			for (var i = 0; i < this.items.length; i++)
 				{
 					var el = document.createElement("div");
 					el.setAttribute("class", "item");
+					el.setAttribute("data-pid", this.items[i].order_id);
 					el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
-					el.children[2].onclick = function () { this.parentNode.remove(); }
-					if (this.items[i])
-						{
-							el.children[0].value = this.items[i].description;
-							el.children[1].value = this.items[i].cost;
+					el.children[0].value = this.items[i].description;
+					el.children[1].value = this.items[i].cost;
+					var item = this.items[i];
+					el.children[2].onclick = function () {
+						var body = { order_id: item.order_id }
+						var req = new Request("/Orders/delete_order", body);
+						var __this = this;
+						req.callback = function (Response) {
+							try {
+								var answer = JSON.parse(Response);
+								if (answer.data.state == "success") {
+									__this.parentNode.remove();
+									_this.items.splice(_this.items.indexOf(item),1);
+								}
+								else
+									new Dialog(answer.data.message);
+							}
+							catch (ex) { console.error(ex); new Dialog(ex.message); }
 						}
+						req.do();
+					}
 					_temp.getElementsByTagName("div")[3].appendChild(el);
 				}
 			_temp.getElementsByClassName("add-floating-button")[0].onclick = function () {
-					var el = document.createElement("div");
-					el.setAttribute("class", "item");
-					el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
-					el.children[2].onclick = function () { this.parentNode.remove(); }
-					document.getElementById("edit-order-items").appendChild(el);
+				var body = {
+					point_id: _this.id,
+					description: "",
+					cost: 0
+				}
+				var __this = this;
+				var req = new Request("/Orders/add_order", body);
+				req.callback = function (Response) {
+					try {
+						var answer = JSON.parse(Response);
+						if (answer.data.state == "success") {
+							var item = {/* TODO считать из ответа сервера */
+								point_id: answer.data.point_id,
+								description: "",
+								cost: 0
+							}
+							_this.items.push(item);
+							var el = document.createElement("div");
+							el.setAttribute("class", "item");
+							el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
+							el.children[2].onclick = function () {
+								var body = { order_id: item.order_id }
+								var req = new Request("/Orders/delete_order", body);
+								var __this = this;
+								req.callback = function (Response) {
+									try {
+										var answer = JSON.parse(Response);
+										if (answer.data.state == "success") {
+											__this.parentNode.remove();
+											_this.items.splice(_this.items.indexOf(item),1);
+										}
+										else
+											new Dialog(answer.data.message);
+									}
+									catch (ex) { console.error(ex); new Dialog(ex.message); }
+								}
+								req.do();
+							}
+							document.getElementById("edit-order-items").appendChild(el);
+						}
+						else
+							new Dialog(answer.data.message);
+					}
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
+				}
+				req.do();
 			}
 			_temp.getElementsByClassName("button-cancel")[0].onclick = function () {
                 if (_this.isAdded)
                     {
+						_this.load();
                         this.parentNode.parentNode.style.opacity = "0";
                         var _t = this;
                         setTimeout(function () { _t.parentNode.parentNode.remove(); }, 550);
@@ -260,6 +318,12 @@ Point.prototype = {
 				var body = {};
 				var _this = this;
 				var _body = body;
+				var blocks = document.getElementsByClassName("item");
+				for (var i = 0; i < blocks.length; i++) {
+					this.items[i].description = blocks[i].children[0].value;
+					this.items[i].cost = parseFloat(blocks[i].children[1].value.replace(new RegExp(",","g"),"."));
+					this.items[i].point_id = parseInt(blocks[i].getAttribute("data-pid"));
+				}
 				body.address = {};
 				body.address.street = (document.getElementById("edit-order-address-street").value) ? document.getElementById("edit-order-address-street").value : null;
 				body.address.house = (document.getElementById("edit-order-address-house").value) ? document.getElementById("edit-order-address-house").value : null;
@@ -283,9 +347,27 @@ Point.prototype = {
 						var answer = JSON.parse(Response);
 						if (answer.data.state == "success")
 							{
-								_this.load();
-								document.getElementById("edit-order").style.opacity = "0";
-								setTimeout(function () { document.getElementById("edit-order").remove(); delVar("pending"); }, 550);
+								var counter = _this.items.length;
+								for (var i = 0; i< _this.items.length; i++) {
+									var req1 = new Request("/Orders/update_order", _this.items[i]);
+									req1.callback = function (Response) {
+										try {
+											var answer = JSON.parse(Response);
+											if (answer.data.state == "success") {
+												counter--;
+												if (counter == 0) {
+													_this.load();
+													document.getElementById("edit-order").style.opacity = "0";
+													setTimeout(function () { document.getElementById("edit-order").remove(); delVar("pending"); }, 550);
+												}
+											}
+											else
+												new Dialog(answer.data.message);
+										}
+										catch (ex) { console.error(ex); new Dialog(ex.message); }
+									}
+									req1.do();
+								}
 							}
 						else
 							new Dialog(answer.data.message);
@@ -345,31 +427,49 @@ Point.prototype = {
 			var body = {};
 			var _this = this;
 			body.point_id = this.id;
-			var req = new Request("/Points/get_info_about_point", body);
+			
+			var req = new Request("/Orders/get_list_orders_by_point_id", body);
 			req.callback = function (Response) {
 				try {
 					var answer = JSON.parse(Response);
-					if (answer.data.state == "success")
-						{
-							_this.address.street = answer.data.point_info.street;
-							_this.address.house = answer.data.point_info.house;
-							_this.address.entry = answer.data.point_info.entry;
-							_this.address.floor = answer.data.point_info.floor;
-							_this.address.flat = answer.data.point_info.flat;
+					if (answer.data.state == "success"){
+						_this.items.splice(0, _this.items.length);
+						for (var j = 0; j<answer.data.orders.length; j++)
+							_this.items.push(answer.data.orders[j]);
+						
+						var req = new Request("/Points/get_info_about_point", body);
+						req.callback = function (Response) {
+							try {
+								var answer = JSON.parse(Response);
+								if (answer.data.state == "success")
+									{
+										_this.address.street = answer.data.point_info.street;
+										_this.address.house = answer.data.point_info.house;
+										_this.address.entry = answer.data.point_info.entry;
+										_this.address.floor = answer.data.point_info.floor;
+										_this.address.flat = answer.data.point_info.flat;
 
-							_this.time.start = answer.data.point_info.time_start;
-							_this.time.end = answer.data.point_info.time_end;
+										_this.time.start = answer.data.point_info.time_start;
+										_this.time.end = answer.data.point_info.time_end;
 
-							_this.phone = answer.data.point_info.phone_number;
+										_this.phone = answer.data.point_info.phone_number;
 
-							_this.totalcost = answer.data.point_info.total_cost;
+										_this.totalcost = answer.data.point_info.total_cost;
 
-							_this.coordinates.longtitude = answer.data.point_info.longtitude;
-							_this.coordinates.latitude = answer.data.point_info.latitude;
-							
-							(_this.isAdded) && (_this.fill());
-							(!_this.isAdded) && (_this.create());
+										_this.coordinates.longtitude = answer.data.point_info.longtitude;
+										_this.coordinates.latitude = answer.data.point_info.latitude;
+
+										(_this.isAdded) && (_this.fill());
+										(!_this.isAdded) && (_this.create());
+
+									}
+								else
+									new Dialog(answer.data.message);
+							}
+							catch (ex) { console.error(ex); new Dialog(ex.message); }
 						}
+						req.do();
+					}
 					else
 						new Dialog(answer.data.message);
 				}
