@@ -25,6 +25,10 @@ class Controller_Points extends Controller{
      */
     private $Model_Points;
 
+    /**
+     * Unit that provides a filtering functions
+     * @var Filter_Unit
+     */
     private $Filter_unit;
 
     /**
@@ -131,26 +135,21 @@ class Controller_Points extends Controller{
      * @throws \Application\Exceptions\Model_Except
      */
     public function action_delete_point(){
-        //$_POST['Json_input'] = '{"point_id":1}';
-        if (isset($_POST['Json_input'])){
-            $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
-            if (is_null($input_json))
-                throw new UFO_Except('Not valid JSON',400);
-        }
-        else throw new UFO_Except('Json_input not found',400);
+        // Example of Json_input
+        //$input_json = '{"point_id":1}';
 
-        // Secure input data
-        $data=$this->secure_array($input_json);
-        unset($input_json);
-        $key_map = array('point_id');
-        if ($this->check_array_keys($key_map,$data)){
-            $point_id = $data['point_id'];
-            // if all checks are successful we are call model method
-            $result =$this->Model_Points->delete_point($point_id);
-            View::output_json($result);
-        }
-        else
-            throw new UFO_Except('incorrect JSON values',400);
+        $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+        // checks validity and decode input JSON
+        $decoded_json = $this->Filter_unit->decode_Json($input_json);
+
+        $point_id = filter_var($decoded_json['point_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
+
+        if (is_null($point_id))
+            throw new UFO_Except("incorrect Json value 'point_id' ",400);
+
+        // if all checks are successful we are call model method
+        $result =$this->Model_Points->delete_point($point_id);
+        View::output_json($result);
     }
 
     /**
@@ -163,26 +162,21 @@ class Controller_Points extends Controller{
      * @throws \Application\Exceptions\Model_Except
      */
     public function action_get_points_by_date(){
-        //$_POST['Json_input'] = '{"delivery_date":145855604800}';
-        if (isset($_POST['Json_input'])){
-            $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
-            if (is_null($input_json))
-                throw new UFO_Except('Not valid JSON',400);
-        }
-        else throw new UFO_Except('Json_input not found',400);
+        //Example of Json_input
+        //$input_json = '{"delivery_date":145855604800}';
 
-        // Secure input data
-        $data=$this->secure_array($input_json);
-        unset($input_json);
-        $key_map = array('delivery_date');
-        if ($this->check_array_keys($key_map,$data)){
-            $delivery_date = $data['delivery_date'];
-            // if all checks are successful we are call model method
-            $result =$this->Model_Points->get_points_by_date($delivery_date);
-            View::output_json($result);
-        }
-        else
-            throw new UFO_Except('incorrect JSON values',400);
+        $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+
+        $decoded_json = $this->Filter_unit->decode_Json($input_json);
+
+        $delivery_date = filter_var($decoded_json['delivery_date'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
+
+        if (is_null($delivery_date) || !$this->Filter_unit->date_check($delivery_date))
+            throw new UFO_Except("incorrect Json value 'delivery_date' ",400);
+
+        // if all checks are successful we are call model method
+        $result =$this->Model_Points->get_points_by_date($delivery_date);
+        View::output_json($result);
     }
 
     /**
@@ -206,27 +200,24 @@ class Controller_Points extends Controller{
      *  string 'order_date'
      * }
      * @throws UFO_Except
+     * @throws \Application\Exceptions\Model_Except
      */
     public function action_get_info_about_point(){
-        $_POST['Json_input'] = '{"point_id":2}';
-        if (isset($_POST['Json_input'])){
-            $input_json = json_decode($_POST['Json_input'], JSON_UNESCAPED_UNICODE);
-            if (is_null($input_json))
-                throw new UFO_Except('Not valid JSON',400);
-        }
-        else throw new UFO_Except('Json_input not found',400);
+        // Example of Json_input
+        //$input_json = '{"point_id":"1"}';
 
-        // Secure input data
-        $data=$this->secure_array($input_json);
-        unset($input_json);
-        $key_map = array('point_id');
-        if ($this->check_array_keys($key_map,$data)){
-            $point_id = $data['point_id'];
-            // if all checks are successful we are call model method
-            $result =$this->Model_Points->get_info_about_point($point_id);
-            View::output_json($result);
-        }
-        else
-            throw new UFO_Except('incorrect JSON values',400);
+        $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+        // checks validity and decode input JSON
+        $decoded_json = $this->Filter_unit->decode_Json($input_json);
+
+        $point_id = filter_var($decoded_json['point_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
+
+        if (is_null($point_id))
+            throw new UFO_Except("incorrect Json value 'point_id' ",400);
+
+        // if all checks are successful we are call model method
+        $result =$this->Model_Points->get_info_about_point($point_id);
+        View::output_json($result);
+
     }
 }

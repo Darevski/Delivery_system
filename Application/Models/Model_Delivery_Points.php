@@ -132,17 +132,18 @@ class Model_Delivery_Points extends Model{
     /**
      * Delete Delivery point and Orders related with from database
      * @param integer $point_id
+     * @return array 'state' - information about execute 'success' - all is ok
      * @throws Model_Except
      */
     public function delete_point($point_id){
+
         if (!$this->isset_point($point_id))
-            throw new Model_Except("Точки доставка не существует");
+            throw new Model_Except("Точки выбранной для удаления не существует");
+
         $delete_query = "DELETE FROM Delivery_Points WHERE Point_ID=?i LIMIT 1";
-        $result = $this->database->query($delete_query,$point_id);
-        if ($result)
-            $execution_result['state'] = 'success';
-        else
-            throw new Model_Except("Mysql error");
+        $this->database->query($delete_query,$point_id);
+
+        $execution_result['state'] = 'success';
         return $execution_result;
     }
 
@@ -191,7 +192,7 @@ class Model_Delivery_Points extends Model{
      */
     public function get_info_about_point($point_id){
         if (!$this->isset_point($point_id))
-            throw new Model_Except("Точки доставка не существует");
+            throw new Model_Except("Точки доставки не существует");
 
         $query = "SELECT total_cost,identifier_order,street,house,note,entry,floor,flat,latitude,longitude,
                 phone_number,time_start,time_end,delivery_Date,order_Date FROM Delivery_Points WHERE Point_ID=?i";
@@ -214,8 +215,8 @@ class Model_Delivery_Points extends Model{
      * @param $point_id
      * @return bool
      */
-    private function isset_point($point_id){
-        $query = "SELECT COUNT(*) FROM Delivery_Points WHERE Point_ID = ?i";
+    public function isset_point($point_id){
+        $query = "SELECT 1 FROM Delivery_Points WHERE Point_ID = ?i LIMIT 1";
         $result =  $this->database->query($query,$point_id);
         $count = $this->database->numRows($result);
         return ($count > 0) ? true : false;

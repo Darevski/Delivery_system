@@ -57,7 +57,7 @@ class Filter_Unit
     }
 
     /**
-     * check date for compliance with unix timestamp
+     * checking number for compliance with the format of timestamp
      * @param $date
      * @return bool
      */

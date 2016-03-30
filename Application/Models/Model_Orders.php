@@ -17,43 +17,50 @@ use Application\Exceptions\Model_Except;
  */
 class Model_Orders extends Model{
 
-    /** Insert order in database table
-     * @param array $data with next structure
-     * int point_id - unique id from Delivery point table
-     * string description - description of item
-     * double cost - cost of this item
+    /**
+     * Insert order in database table and return his id
+     * @param integer $point_id unique id from Delivery point table
+     * @param string $description description of item
+     * @param float $cost cost of this item
      * @return mixed
      * @throws Model_Except
      */
-    public function add_order($data){
-        $point_id = $data['point_id'];
-        $description = $data['description'];
-        $cost = $data['cost'];
+    public function add_order($point_id,$description,$cost){
+        // using Delivery Points model for verify the existence of point
+        $model_points = new Model_Delivery_Points();
+        if (!$model_points->isset_point($point_id))
+            throw new Model_Except("Точки доставки не существует");
 
         $insert_query = "INSERT INTO Orders (Point_ID,Description,Cost) VALUES (?i,?s,?s)";
-        $result = $this->database->query($insert_query,$point_id,$description,$cost);
-        if ($result)
-            $execution_result['state'] = 'success';
-        else
-            throw new Model_Except("Mysql error");
+        $this->database->query($insert_query,$point_id,$description,$cost);
+
+        // Get id of inserted order
+        $insert_id = $this->database->insertId();
+
+        $execution_result['order_id'] = $insert_id;
+        $execution_result['state'] = 'success';
         return $execution_result;
     }
 
     /**
      * Return list of orders for selected delivery point
-     * @param $point_id
-     * @return mixed
-     * orders[
-     * { integer 'order_id', string 'description', integer 'cost'}
-     * ]
+     * @param int $point_id
+     * @return mixed array{ orders[ {integer 'order_id', string 'description', float 'cost'} ],
+     *                      string state = 'success' -all is ok }
+     * @throws Model_Except
      */
     public function get_list_orders_by_point_id($point_id){
+        // using Delivery Points model for verify the existence of point
+        $model_points = new Model_Delivery_Points();
+        if (!$model_points->isset_point($point_id))
+            throw new Model_Except("Точки доставки не существует");
+
         $query = "SELECT order_id,description,cost FROM Orders WHERE Point_ID=?i";
         $result_query = $this->database->getAll($query,$point_id);
 
         foreach ($result_query as &$value){
             settype($value['order_id'],"integer");
-            settype($value['cost'],"integer");
+            settype($value['cost'],"float");
         }
 
         $result['orders'] = $result_query;
@@ -63,42 +70,49 @@ class Model_Orders extends Model{
 
     /**
      * Delete Order From DataBase
-     * @param $order_id
+     * @param integer $order_id
      * @return mixed
      * @throws Model_Except
      */
     public function delete_order($order_id){
+        if(!$this->isset_order($order_id))
+            throw  new Model_Except("Заказа с указанным id не существует");
+
         $delete_query = "DELETE FROM Orders WHERE Order_ID = ?i";
-        $result = $this->database->query($delete_query,$order_id);
-        if ($result)
-            $execution_result['state'] = 'success';
-        else
-            throw new Model_Except("Mysql error");
+        $this->database->query($delete_query,$order_id);
+
+        $execution_result['state'] = 'success';
         return $execution_result;
     }
 
     /**
      * Update Order parameters in Database
-     * @param $data{
-     *  integer order_id
-     *  string description
-     *  float cost
-     * }
+     * @param integer $order_id
+     * @param string $description
+     * @param float $cost
      * @return mixed
      * @throws Model_Except
      */
-    public function update_order($data){
-        $order_id = $data['order_id'];
-        $description = $data['description'];
-        $cost = $data['cost'];
+    public function update_order($order_id,$description,$cost){
+        if(!$this->isset_order($order_id))
+            throw  new Model_Except("Заказа с указанным id не существует");
 
         $update_query = "UPDATE Orders SET Description=?s,Cost=?s WHERE Order_ID=?i";
-        $result = $this->database->query($update_query,$description,$cost,$order_id);
+        $this->database->query($update_query,$description,$cost,$order_id);
 
-        if ($result)
-            $execution_result['state'] = 'success';
-        else
-            throw new Model_Except("Mysql error");
+        $execution_result['state'] = 'success';
         return $execution_result;
+    }
+
+    /**
+     * Check`s availability order in database
+     * @param $order_id
+     * @return bool
+     */
+    public function isset_order($order_id){
+        $query = "SELECT 1 FROM Orders WHERE Order_ID = ?i LIMIT 1";
+        $result =  $this->database->query($query,$order_id);
+        $count = $this->database->numRows($result);
+        return ($count > 0) ? true : false;
     }
 }
