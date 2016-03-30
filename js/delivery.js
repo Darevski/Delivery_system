@@ -1,20 +1,19 @@
 var Points = [];
-
+var myMap;
+ymaps.ready(function () {
+    myMap = new ymaps.Map("map", {
+        center: [53.9022528, 27.561639],
+        zoom: 11,
+        controls: ["trafficControl", "typeSelector", "fullscreenControl", "zoomControl"]
+    });
+    DoOnLoad();
+});
 function DoOnLoad()
 {
 	document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
 	document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
 	delVar("pending");
 	loadPoints();
-    ymaps.ready(init);
-    var myMap;
-
-    function init(){     
-        myMap = new ymaps.Map("map", {
-            center: [55.76, 37.64],
-            zoom: 7
-        });
-    }
 }
 
 function Point()
@@ -42,13 +41,14 @@ function Point()
 	this.Object = null;
 	this.id = null;
 	this.isAdded = false;
-	this.map_id = null;
+	this.map_id = (Points.length == 0) ? 1 : (Points[Points.length-1].map_id + 1);
 	this.uniq = null;
 	
 	this.coordinates = {
-		longtitude: null,
+		longitude: null,
 		latitude: null
 	}
+    this.mapObj = null;
 }
 Point.prototype = {
 	toggle: function () {
@@ -66,6 +66,7 @@ Point.prototype = {
 			this.isAdded = 1;
 			var _order = document.createElement("div");
 			_order.setAttribute("class", "order");
+			_order.setAttribute("data-mapid", this.map_id);
 			var _t1 = document.createElement("div");
 			var _t2 = document.createElement("div");
 			
@@ -193,8 +194,27 @@ Point.prototype = {
 			this.fill();
 			this.Object.style.marginLeft = "-600px";
 			this.Object.style.height = "0px";
-			document.getElementById("orderlist").appendChild(this.Object);
+			var blocks = document.getElementById("orderlist").children;
+			var _id = -1;
+			var min_distance = -1;
+			for (var i = 0; i < blocks.length; i++) {
+				var _t = parseInt(blocks[i].getAttribute("data-mapid"));
+				if ( _t > this.map_id)
+					((min_distance == -1) || (min_distance > Math.abs(this.map_id - _t))) && ((min_distance = Math.abs(this.map_id - _t)) && (_id = i));
+			}
+			(_id == -1) ? document.getElementById("orderlist").appendChild(this.Object) : document.getElementById("orderlist").insertBefore(this.Object, blocks[_id]);
 			this.Object.style.height = "";
+			this.mapObj = new ymaps.GeoObject({
+					geometry: {
+						type: "Point",
+						coordinates: [this.coordinates.latitude, this.coordinates.longitude]
+					},
+					properties: {
+								iconContent: this.map_id,
+								balloonContent: this.address.street + ", " + this.address.house
+					}
+				}, { preset: 'islands', iconColor: '#1faee9' });
+			myMap.geoObjects.add(this.mapObj);
 			setTimeout(function () { _this.Object.style.marginLeft = ""; }, 550);
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
@@ -347,7 +367,13 @@ Point.prototype = {
 						var answer = JSON.parse(Response);
 						if (answer.data.state == "success")
 							{
+                                function ok_end() {
+                                    _this.load();
+                                    document.getElementById("edit-order").style.opacity = "0";
+                                    setTimeout(function () { document.getElementById("edit-order").remove(); delVar("pending"); }, 550);
+                                }
 								var counter = _this.items.length;
+                                (_this.items.length == 0) && (ok_end());
 								for (var i = 0; i< _this.items.length; i++) {
 									var req1 = new Request("/Orders/update_order", _this.items[i]);
 									req1.callback = function (Response) {
@@ -355,11 +381,8 @@ Point.prototype = {
 											var answer = JSON.parse(Response);
 											if (answer.data.state == "success") {
 												counter--;
-												if (counter == 0) {
-													_this.load();
-													document.getElementById("edit-order").style.opacity = "0";
-													setTimeout(function () { document.getElementById("edit-order").remove(); delVar("pending"); }, 550);
-												}
+												if (counter == 0)
+                                                    ok_end();
 											}
 											else
 												new Dialog(answer.data.message);
@@ -456,12 +479,9 @@ Point.prototype = {
 
 										_this.totalcost = answer.data.point_info.total_cost;
 
-										_this.coordinates.longtitude = answer.data.point_info.longtitude;
+										_this.coordinates.longitude = answer.data.point_info.longitude;
 										_this.coordinates.latitude = answer.data.point_info.latitude;
-
-										(_this.isAdded) && (_this.fill());
-										(!_this.isAdded) && (_this.create());
-
+										(_this.isAdded) ? (_this.fill()) : (_this.create());
 									}
 								else
 									new Dialog(answer.data.message);
@@ -508,7 +528,7 @@ Point.prototype = {
 			((this.items.length == 0) || (this.items.length > 4)) && (block.innerHTML += " товаров на сумму ");
 			
 			(this.totalcost != void(0)) && (block.innerHTML += this.totalcost);
-			
+			(this.mapObj != null) && (this.mapObj.geometry.setCoordinates([this.coordinates.latitude, this.coordinates.longitude]));
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
@@ -521,6 +541,7 @@ Point.prototype = {
 					_this.Object.style.height = "0px";
 					_this.Object.style.margin = "-20px 0 0 -600px";
 					_this.Object.style.padding = "0";
+					myMap.geoObjects.remove(_this.mapObj);
 					setTimeout(function () {
 						_this.Object.remove();
 						Points.splice(Points.indexOf(_this),1);

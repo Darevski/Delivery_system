@@ -2,7 +2,6 @@ window.onerror = function (message) {
 	new Dialog(message);
 	console.error(message);
 }
-window.onload = DoOnLoad;
 /** Возвращает информацию из хранилища
 * @param {string} name Имя ключа в хранилище
 * @return {string} item В случае существования возвращает значение, иначе false
