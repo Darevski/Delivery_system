@@ -73,43 +73,40 @@ class Model_Delivery_Points extends Model{
     }
 
     /**
-     * @param $data mixed array with next values
-     * address{
-     *  string street
-     *  string house
-     *  string note
-     *  string entry
-     *  int flor
-     *  int flat
-     * }
-     * int(12) phone for example '375291234567'
-     * time {
-     *  start: "H:i:s"
-     *  end: "H:i:s"
-     * }
-     * unix timestamp delivery_date
-     * int point_id - Unique value (Points_ID) from database Delivery_Points
+     * Update information of delivery point in database
+     * Обновляет информацию о точке доставки в базе данных
+     * @param string $street
+     * @param string $house
+     * @param string $entry
+     * @param integer $floor
+     * @param integer $flat
+     * @param integer $point_id
+     * @param string $note
+     * @param string $time_start "H:i:s"
+     * @param string $time_end "H:i:s"
+     * @param integer $phone_number
+     * @param integer $delivery_date unix timestamp
      * @return array {state: information about execute 'success' - all is ok}
      * @throws Model_Except
+     * @throws \Application\Exceptions\Curl_Except
+     * @throws \Application\Exceptions\Server_Error_Except
+     * @throws \Application\Exceptions\UFO_Except
      */
-    public function fill_point($data){
+    public function fill_point($street,$house,$entry,$floor,$flat,$point_id,$note,$time_start,$time_end,$phone_number,$delivery_date){
 
-        // +-----------address----------------+
-        $street = $data['address']['street'];
-        $house = $data['address']['house'];
-        $entry = $data['address']['entry'];
-        $floor= $data['address']['floor'];
-        $flat = $data['address']['flat'];
-        // ------------address-----------------
-        $phone_number = $data['phone'];
-        $note = $data['note'];
-        $time_start = date('H:i:s',strtotime($data['time']['start']));
-        $time_end = date('H:i:s',strtotime($data['time']['end']));
-        $delivery_Date = date('Ymd',$data['delivery_date']);
-        $point_id = $data['point_id'];
-
+        // check that point isset in database
         if (!$this->isset_point($point_id))
-            throw new Model_Except("Точки доставки не существует");
+            throw new Model_Except("Обновляемой точки доставки не существует");
+        // relevance date check
+        if (strtotime(date('d-m-Y H:i:s')) > $delivery_date)
+            throw new Model_Except("Дата заказа не может быть меньше текущей");
+
+        //convert string time to "H:i:s"
+        $time_start = date('H:i:s',strtotime($time_start));
+        $time_end = date('H:i:s',strtotime($time_end));
+        if ($time_start > $time_end)
+            throw new Model_Except("Начальное ограничение времени доставки, не может быть больше конечного ограничения");
+
         // Use Yandex. Maps GeoCoder Unit
         $yandex = new Yandex_Geo_Api();
         $point_info = $yandex->SetGeoCode(sprintf("%s,%s",$street,$house))
@@ -125,13 +122,10 @@ class Model_Delivery_Points extends Model{
         $update_point_query = "UPDATE Delivery_Points SET Street =?s, House=?s, Note=?s,Entry=?s,floor=?i,flat=?i,
               phone_number=?i,time_start=?s,time_end=?s,Delivery_Date=?s,Longitude=?s, Latitude=?s WHERE Point_ID=?i";
 
-        $result = $this->database->query($update_point_query,$street,$house,$note,$entry,$floor,$flat,
-            $phone_number,$time_start,$time_end,$delivery_Date,$longitude,$latitude,$point_id);
+        $this->database->query($update_point_query,$street,$house,$note,$entry,$floor,$flat,
+            $phone_number,$time_start,$time_end,$delivery_date,$longitude,$latitude,$point_id);
 
-        if ($result)
-            $execution_result['state'] = 'success';
-        else
-            throw new Model_Except("Mysql error");
+        $execution_result['state'] = 'success';
         return $execution_result;
     }
 
