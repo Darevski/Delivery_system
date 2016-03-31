@@ -98,7 +98,7 @@ class Model_Delivery_Points extends Model{
         if (!$this->isset_point($point_id))
             throw new Model_Except("Обновляемой точки доставки не существует");
         // relevance date check
-        if (strtotime(date('d-m-Y H:i:s')) > $delivery_date)
+        if (strtotime(date('d-m-Y')) >= $delivery_date)
             throw new Model_Except("Дата заказа не может быть меньше текущей");
 
         //convert string time to "H:i:s"

@@ -12,8 +12,27 @@ function DoOnLoad()
 {
 	document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
 	document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
-	delVar("pending");
-	loadPoints();
+	var req = new Request("/API/get_time");
+	req.callback = function (Response) {
+		try {
+			var answer = JSON.parse(Response);
+			if (answer.data) {
+				var _t = new Date(answer.data * 1000);
+				var date_input = _t.getFullYear() + "-";
+				(_t.getMonth() < 10) && (date_input += "0");
+				date_input += (_t.getMonth() + 1) + "-";
+				(_t.getDate() < 10) && (date_input += "0");
+				date_input += _t.getDate();
+				document.querySelector('#store-date > input[type="date"]').value = date_input;
+				delVar("pending");
+				loadPoints();
+			}
+			else
+				new Dialog("Ошибка ответа сервера");
+		}
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
+	}
+	req.do();
 }
 
 function Point()
@@ -279,7 +298,7 @@ Point.prototype = {
 						var answer = JSON.parse(Response);
 						if (answer.data.state == "success") {
 							var item = {/* TODO считать из ответа сервера */
-								point_id: answer.data.point_id,
+								order_id: answer.data.order_id,
 								description: "",
 								cost: 0
 							}
