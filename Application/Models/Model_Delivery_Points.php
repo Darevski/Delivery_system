@@ -100,7 +100,7 @@ class Model_Delivery_Points extends Model{
         // relevance date check
         if (strtotime(date('d-m-Y')) >= $delivery_date)
             throw new Model_Except("Дата заказа не может быть меньше текущей");
-
+        $delivery_date = date('Y-m-d',$delivery_date);
         //convert string time to "H:i:s"
         $time_start = date('H:i:s',strtotime($time_start));
         $time_end = date('H:i:s',strtotime($time_end));

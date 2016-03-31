@@ -30,7 +30,8 @@ class Model_Orders extends Model{
         $model_points = new Model_Delivery_Points();
         if (!$model_points->isset_point($point_id))
             throw new Model_Except("Точки доставки не существует");
-
+        if ($cost <0)
+            throw new Model_Except("Стоимость не может быть меньше 0");
         $insert_query = "INSERT INTO Orders (Point_ID,Description,Cost) VALUES (?i,?s,?s)";
         $this->database->query($insert_query,$point_id,$description,$cost);
 
