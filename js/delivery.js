@@ -269,6 +269,8 @@ Point.prototype = {
 						var body = { order_id: item.order_id }
 						var req = new Request("/Orders/delete_order", body);
 						var __this = this;
+                        var _onclick = this.onclick;
+                        this.onclick = void(0);
 						req.callback = function (Response) {
 							try {
 								var answer = JSON.parse(Response);
@@ -276,8 +278,10 @@ Point.prototype = {
 									__this.parentNode.remove();
 									_this.items.splice(_this.items.indexOf(item),1);
 								}
-								else
+								else {
 									new Dialog(answer.data.message);
+                                    __this.onclick = _onclick;
+                                }
 							}
 							catch (ex) { console.error(ex); new Dialog(ex.message); }
 						}
@@ -307,19 +311,23 @@ Point.prototype = {
 							el.setAttribute("class", "item");
 							el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
 							el.children[2].onclick = function () {
-								var body = { order_id: item.order_id }
+                            var body = { order_id: item.order_id }
 								var req = new Request("/Orders/delete_order", body);
 								var __this = this;
-								req.callback = function (Response) {
-									try {
-										var answer = JSON.parse(Response);
-										if (answer.data.state == "success") {
-											__this.parentNode.remove();
-											_this.items.splice(_this.items.indexOf(item),1);
-										}
-										else
-											new Dialog(answer.data.message);
-									}
+                                var _onclick = this.onclick;
+                                this.onclick = void(0);
+                                req.callback = function (Response) {
+                                    try {
+                                        var answer = JSON.parse(Response);
+                                        if (answer.data.state == "success") {
+                                            __this.parentNode.remove();
+                                            _this.items.splice(_this.items.indexOf(item),1);
+                                        }
+                                        else {
+                                            new Dialog(answer.data.message);
+                                            __this.onclick = _onclick;
+                                        }
+                                    }
 									catch (ex) { console.error(ex); new Dialog(ex.message); }
 								}
 								req.do();
@@ -353,71 +361,92 @@ Point.prototype = {
     },
 	save: function () {
 		try {
-			if (!getVar("pending")) {
-				var body = {};
-				var _this = this;
-				var _body = body;
-				var blocks = document.getElementsByClassName("item");
-				for (var i = 0; i < blocks.length; i++) {
-					this.items[i].description = blocks[i].children[0].value;
-					this.items[i].cost = parseFloat(blocks[i].children[1].value.replace(new RegExp(",","g"),"."));
-					this.items[i].point_id = parseInt(blocks[i].getAttribute("data-pid"));
-				}
-				body.address = {};
-				body.address.street = (document.getElementById("edit-order-address-street").value) ? document.getElementById("edit-order-address-street").value : null;
-				body.address.house = (document.getElementById("edit-order-address-house").value) ? document.getElementById("edit-order-address-house").value : null;
-				body.address.entry = (document.getElementById("edit-order-address-entry").value) ? document.getElementById("edit-order-address-entry").value : null;
-				body.address.floor = (document.getElementById("edit-order-address-floor").value) ? parseInt(document.getElementById("edit-order-address-floor").value) : null;
-				body.address.flat = (document.getElementById("edit-order-address-flat").value) ? parseInt(document.getElementById("edit-order-address-flat").value) : null;
+            var _this = this;
+            if (!getVar("pending")) {
+                var loader = new PreLoader(document.getElementById("edit-order-window"));
+                loader.inprogress = function () {
+                    try {
+                        var body = {};
+                        var _body = body;
+                        var blocks = document.getElementsByClassName("item");
+                        for (var i = 0; i < blocks.length; i++) {
+                            _this.items[i].description = blocks[i].children[0].value;
+                            _this.items[i].cost = parseFloat(blocks[i].children[1].value.replace(new RegExp(",","g"),"."));
+                            _this.items[i].point_id = parseInt(blocks[i].getAttribute("data-pid"));
+                        }
+                        body.address = {};
+                        body.address.street = (document.getElementById("edit-order-address-street").value) ? document.getElementById("edit-order-address-street").value : null;
+                        body.address.house = (document.getElementById("edit-order-address-house").value) ? document.getElementById("edit-order-address-house").value : null;
+                        body.address.entry = (document.getElementById("edit-order-address-entry").value) ? document.getElementById("edit-order-address-entry").value : null;
+                        body.address.floor = (document.getElementById("edit-order-address-floor").value) ? parseInt(document.getElementById("edit-order-address-floor").value) : null;
+                        body.address.flat = (document.getElementById("edit-order-address-flat").value) ? parseInt(document.getElementById("edit-order-address-flat").value) : null;
 
-				body.point_id = parseInt(this.id);
+                        body.point_id = parseInt(_this.id);
 
-				body.time = {};
-				body.time.start = document.querySelector("#edit-order-time > input.time-from").value + ":00";
-				body.time.end = document.querySelector("#edit-order-time > input.time-to").value + ":00";
+                        body.time = {};
+                        var _tdate = new Date();
+                        var _tel = document.querySelector("#edit-order-time > input.time-from").value;
+                        _tdate.setHours(_tel[0]+_tel[1], _tel[3]+_tel[4], 0);
+                        body.time.start = (_tdate.getHours() > 9) ? _tdate.getHours() : "0" + _tdate.getHours();
+                        body.time.start += ":";
+                        body.time.start += (_tdate.getMinutes() > 9) ? _tdate.getMinutes() : "0" + _tdate.getMinutes();
+                        body.time.start += ":";
+                        body.time.start += (_tdate.getSeconds() > 9) ? _tdate.getSeconds() : "0" + _tdate.getSeconds();
 
-				body.phone = (document.querySelector('#edit-order-phone > input[type="tel"]').value) ? parseInt(document.querySelector('#edit-order-phone > input[type="tel"]').value) : null;
-				var _t = new Date(document.querySelector('#store-date > input[type="date"]').value);
-				body.delivery_date = parseInt(_t.getTime() / 1000);
-				body.note = "TODO"; /* TODO: примечание */
-				var req = new Request("/Points/fill_point", body);
-				req.callback = function (Response) {
-					try {
-						var answer = JSON.parse(Response);
-						if (answer.data.state == "success")
-							{
-                                function ok_end() {
-                                    _this.load();
-                                    document.getElementById("edit-order").style.opacity = "0";
-                                    setTimeout(function () { document.getElementById("edit-order").remove(); delVar("pending"); }, 550);
-                                }
-								var counter = _this.items.length;
-                                (_this.items.length == 0) && (ok_end());
-								for (var i = 0; i< _this.items.length; i++) {
-									var req1 = new Request("/Orders/update_order", _this.items[i]);
-									req1.callback = function (Response) {
-										try {
-											var answer = JSON.parse(Response);
-											if (answer.data.state == "success") {
-												counter--;
-												if (counter == 0)
-                                                    ok_end();
-											}
-											else
-												new Dialog(answer.data.message);
-										}
-										catch (ex) { console.error(ex); new Dialog(ex.message); }
-									}
-									req1.do();
-								}
-							}
-						else
-							new Dialog(answer.data.message);
-					}
-					catch (ex) { console.error(ex); new Dialog(ex.message); }
-				}
-				req.do();
-			}
+                        var _tdate = new Date();
+                        var _tel = document.querySelector("#edit-order-time > input.time-to").value;
+                        _tdate.setHours(_tel[0]+_tel[1], _tel[3]+_tel[4], 0);
+                        body.time.end = (_tdate.getHours() > 9) ? _tdate.getHours() : "0" + _tdate.getHours();
+                        body.time.end += ":";
+                        body.time.end += (_tdate.getMinutes() > 9) ? _tdate.getMinutes() : "0" + _tdate.getMinutes();
+                        body.time.end += ":";
+                        body.time.end += (_tdate.getSeconds() > 9) ? _tdate.getSeconds() : "0" + _tdate.getSeconds();
+                        
+                        body.phone = (document.querySelector('#edit-order-phone > input[type="tel"]').value) ? parseInt(document.querySelector('#edit-order-phone > input[type="tel"]').value) : null;
+                        var _t = new Date(document.querySelector('#store-date > input[type="date"]').value);
+                        body.delivery_date = parseInt(_t.getTime() / 1000);
+                        body.note = "TODO"; /* TODO: примечание */
+                        var req = new Request("/Points/fill_point", body);
+                        req.callback = function (Response) {
+                            try {
+                                var answer = JSON.parse(Response);
+                                if (answer.data.state == "success")
+                                    {
+                                        function ok_end() {
+                                            _this.load();
+                                            loader.purge();
+                                            document.getElementById("edit-order").style.opacity = "0";
+                                            setTimeout(function () { document.getElementById("edit-order").remove(); delVar("pending"); }, 550);
+                                        }
+                                        var counter = _this.items.length;
+                                        (_this.items.length == 0) && (ok_end());
+                                        for (var i = 0; i< _this.items.length; i++) {
+                                            var req1 = new Request("/Orders/update_order", _this.items[i]);
+                                            req1.callback = function (Response) {
+                                                try {
+                                                    var answer = JSON.parse(Response);
+                                                    if (answer.data.state == "success") {
+                                                        counter--;
+                                                        if (counter == 0)
+                                                            ok_end();
+                                                    }
+                                                    else { loader.purge(); new Dialog(answer.data.message); }
+                                                }
+                                                catch (ex) { console.error(ex); new Dialog(ex.message); }
+                                            }
+                                            req1.do();
+                                        }
+                                    }
+                                else { loader.purge(); new Dialog(answer.data.message); }
+                            }
+                            catch (ex) { console.error(ex); new Dialog(ex.message); }
+                        }
+                        req.do();
+                    }
+                    catch (ex) { console.error(ex); new Dialog(ex.message); }
+                }
+                loader.create();
+            }
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
