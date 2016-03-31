@@ -9,7 +9,6 @@
  */
 
 namespace Application\Exceptions;
-use Application\Core\View;
 
 /**
  * Class UFO_Except
@@ -20,7 +19,6 @@ use Application\Core\View;
 class UFO_Except extends Main_Except
 {
     /**
-     *
      * Error detection code and outputting appropriate page
      * @param UFO_Except $error received exception
      */
@@ -30,24 +28,22 @@ class UFO_Except extends Main_Except
             case 404:   //Отсутсвие страницы
                 $data['title'] = '404 Bad Gateway';
                 $data['message'] = 'Запрашиваемой страницы не существует';
-                $data['debug_message'] = $error->getMessage();
+                $data['debug_message'] = sprintf("error initialized in %s on line %s <br>
+                                          with message '%s' <br>",
+                    $error->getFile(),$error->getLine(),$error->getMessage());
                 $data['response_code'] = 404;
                 break;
             default:
                 $data['title'] = '400 Bad Request';
                 $data['message'] = 'нераспознанный запрос';
-                $data['debug_message'] = $error->message;
+                $data['debug_message'] = sprintf("error initialized in %s on line %s <br>
+                                          with message '%s' <br>",
+                    $error->getFile(),$error->getLine(),$error->getMessage());
                 $data['response_code'] = 400;
                 break;
         }
         $this->print_error($data);
     }
 
-    /**
-     * Output Information about error
-     * @param $data
-     */
-    private function print_error($data){
-        View::display_errors($data);
-    }
+
 }

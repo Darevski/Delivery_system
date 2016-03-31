@@ -34,7 +34,16 @@ catch (Exceptions\UFO_Except $error){
     $error->classification_error($error);
 }
 catch (Exceptions\SQL_Except $error){
-    echo $error->getMessage();
+    $error->classification_error($error);
+}
+catch (Exceptions\Curl_Except $error){
+    $error->exception_handling($error);
+}
+catch (Exceptions\Model_Except $error){
+    $error->exception_handling($error);
+}
+catch (Exceptions\Server_Error_Except $error){
+    $error->exception_handling($error);
 }
 catch (Exceptions\Main_Except $error){
     echo $error->getMessage();
