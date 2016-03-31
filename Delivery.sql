@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Mar 24, 2016 at 04:05 PM
+-- Generation Time: Mar 31, 2016 at 04:44 PM
 -- Server version: 5.5.47-0ubuntu0.14.04.1
 -- PHP Version: 5.6.19-1+deb.sury.org~trusty+1
 
@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS `Delivery_Points` (
   `identifier_order` text COLLATE utf8_unicode_ci,
   `Street` text COLLATE utf8_unicode_ci NOT NULL,
   `House` text COLLATE utf8_unicode_ci NOT NULL,
-  `Corps` text COLLATE utf8_unicode_ci,
   `Entry` text COLLATE utf8_unicode_ci,
   `floor` int(11) DEFAULT NULL,
   `flat` int(11) DEFAULT NULL,
@@ -51,8 +50,8 @@ CREATE TABLE IF NOT EXISTS `Delivery_Points` (
 -- Dumping data for table `Delivery_Points`
 --
 
-INSERT INTO `Delivery_Points` (`Point_ID`, `Note`, `Total_Cost`, `identifier_order`, `Street`, `House`, `Corps`, `Entry`, `floor`, `flat`, `Latitude`, `Longitude`, `phone_number`, `time_start`, `time_end`, `Delivery_Date`, `Order_Date`) VALUES
-(1, NULL, 250, '20160321#1', 'улица Рафиева', '113', NULL, '5', 4, 159, 53.856689, 27.43383, 375297768637, '18:00:00', '20:15:00', '2016-03-22', '2016-03-21');
+INSERT INTO `Delivery_Points` (`Point_ID`, `Note`, `Total_Cost`, `identifier_order`, `Street`, `House`, `Entry`, `floor`, `flat`, `Latitude`, `Longitude`, `phone_number`, `time_start`, `time_end`, `Delivery_Date`, `Order_Date`) VALUES
+(1, NULL, 250, '20160321#1', 'улица Рафиева', '113', '5', 4, 159, 53.856689, 27.43383, 375297768637, '18:00:00', '20:15:00', '2016-03-22', '2016-03-21');
 
 -- --------------------------------------------------------
 
@@ -67,15 +66,47 @@ CREATE TABLE IF NOT EXISTS `Orders` (
   `Cost` double NOT NULL,
   PRIMARY KEY (`Order_ID`),
   KEY `Point_ID` (`Point_ID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=3 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=22 ;
 
 --
 -- Dumping data for table `Orders`
 --
 
 INSERT INTO `Orders` (`Order_ID`, `Point_ID`, `Description`, `Cost`) VALUES
-(1, 1, 'Товар №1', 150),
-(2, 1, 'Товар №2', 100);
+(2, 1, 'Товар №3', 352.14);
+
+--
+-- Triggers `Orders`
+--
+DROP TRIGGER IF EXISTS `Add_Order`;
+DELIMITER //
+CREATE TRIGGER `Add_Order` AFTER INSERT ON `Orders`
+ FOR EACH ROW BEGIN
+   UPDATE Delivery_Points SET Total_Cost = (Total_Cost + New.Cost) WHERE Point_Id = New.Point_id;
+END
+//
+DELIMITER ;
+DROP TRIGGER IF EXISTS `Delete_Order`;
+DELIMITER //
+CREATE TRIGGER `Delete_Order` AFTER DELETE ON `Orders`
+ FOR EACH ROW BEGIN
+	SET @total_cost := (Select Total_cost From Delivery_Points Where Point_Id = Old.Point_id);
+	IF ((@total_cost- Old.Cost) >= 0) THEN
+   		UPDATE Delivery_Points SET Total_Cost = (Total_Cost-Old.Cost) WHERE Point_Id = Old.Point_id;
+	Else
+		UPDATE Delivery_Points SET Total_Cost = 0 WHERE Point_Id = Old.Point_id;
+	END IF;
+END
+//
+DELIMITER ;
+DROP TRIGGER IF EXISTS `Update_Order`;
+DELIMITER //
+CREATE TRIGGER `Update_Order` AFTER UPDATE ON `Orders`
+ FOR EACH ROW BEGIN
+   UPDATE Delivery_Points SET Total_Cost = (Total_Cost- Old.Cost + New.Cost) WHERE Point_Id = New.Point_id;
+END
+//
+DELIMITER ;
 
 --
 -- Constraints for dumped tables
