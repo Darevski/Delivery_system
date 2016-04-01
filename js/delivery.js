@@ -243,7 +243,7 @@ Point.prototype = {
 			var _this = this;
 			var _temp = document.createElement("div");
 			_temp.setAttribute("id", "edit-order");
-			_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
+			_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" min="17:00" max="22:00" step="900" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to" min="17:00" max="22:00" step="900"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
 			_temp.getElementsByTagName("p")[0].innerHTML = this.uniq;
 			(this.address.street) && (_temp.getElementsByTagName("input")[0].value = this.address.street);
 			(this.address.house)  && (_temp.getElementsByTagName("input")[1].value = this.address.house);
@@ -368,6 +368,15 @@ Point.prototype = {
                     try {
                         var body = {};
                         var _body = body;
+						var errmsg;
+						var _send = true;
+						
+						function rep_err(msg) {
+							(!errmsg) && (errmsg = msg);
+							_send = false;
+							return null;
+						}
+						
                         var blocks = document.getElementsByClassName("item");
                         for (var i = 0; i < blocks.length; i++) {
                             _this.items[i].description = blocks[i].children[0].value;
@@ -375,8 +384,8 @@ Point.prototype = {
                             _this.items[i].point_id = parseInt(blocks[i].getAttribute("data-pid"));
                         }
                         body.address = {};
-                        body.address.street = (document.getElementById("edit-order-address-street").value) ? document.getElementById("edit-order-address-street").value : null;
-                        body.address.house = (document.getElementById("edit-order-address-house").value) ? document.getElementById("edit-order-address-house").value : null;
+                        body.address.street = (document.getElementById("edit-order-address-street").value) ? document.getElementById("edit-order-address-street").value : rep_err("Не указана улица");
+                        body.address.house = (document.getElementById("edit-order-address-house").value) ? document.getElementById("edit-order-address-house").value : rep_err("Не указан дом");
                         body.address.entry = (document.getElementById("edit-order-address-entry").value) ? document.getElementById("edit-order-address-entry").value : null;
                         body.address.floor = (document.getElementById("edit-order-address-floor").value) ? parseInt(document.getElementById("edit-order-address-floor").value) : null;
                         body.address.flat = (document.getElementById("edit-order-address-flat").value) ? parseInt(document.getElementById("edit-order-address-flat").value) : null;
@@ -385,7 +394,7 @@ Point.prototype = {
 
                         body.time = {};
                         var _tdate = new Date();
-                        var _tel = document.querySelector("#edit-order-time > input.time-from").value;
+                        var _tel = (document.querySelector("#edit-order-time > input.time-from").value) ? document.querySelector("#edit-order-time > input.time-from").value : errmsg("Некорректное время начала");
                         _tdate.setHours(_tel[0]+_tel[1], _tel[3]+_tel[4], 0);
                         body.time.start = (_tdate.getHours() > 9) ? _tdate.getHours() : "0" + _tdate.getHours();
                         body.time.start += ":";
@@ -394,7 +403,7 @@ Point.prototype = {
                         body.time.start += (_tdate.getSeconds() > 9) ? _tdate.getSeconds() : "0" + _tdate.getSeconds();
 
                         var _tdate = new Date();
-                        var _tel = document.querySelector("#edit-order-time > input.time-to").value;
+						var _tel = (document.querySelector("#edit-order-time > input.time-to").value) ? document.querySelector("#edit-order-time > input.time-to").value : errmsg("Некорректное время окончания")
                         _tdate.setHours(_tel[0]+_tel[1], _tel[3]+_tel[4], 0);
                         body.time.end = (_tdate.getHours() > 9) ? _tdate.getHours() : "0" + _tdate.getHours();
                         body.time.end += ":";
@@ -402,6 +411,8 @@ Point.prototype = {
                         body.time.end += ":";
                         body.time.end += (_tdate.getSeconds() > 9) ? _tdate.getSeconds() : "0" + _tdate.getSeconds();
                         
+						(body.time.start > body.time.end) && (rep_err("Неверное время"));
+						
                         body.phone = (document.querySelector('#edit-order-phone > input[type="tel"]').value) ? parseInt(document.querySelector('#edit-order-phone > input[type="tel"]').value) : null;
                         var _t = new Date(document.querySelector('#store-date > input[type="date"]').value);
                         body.delivery_date = parseInt(_t.getTime() / 1000);
@@ -441,7 +452,10 @@ Point.prototype = {
                             }
                             catch (ex) { console.error(ex); new Dialog(ex.message); }
                         }
-                        req.do();
+                        if (_send)
+							req.do();
+						else
+							((new Dialog(errmsg)) && (loader.purge()));
                     }
                     catch (ex) { console.error(ex); new Dialog(ex.message); }
                 }
