@@ -78,6 +78,7 @@ class Yandex_Geo_Api {
             throw new UFO_Except($error_message,400);
         }
         $this->_server_response = new Yandex_Response_Object($data);
+        return $this;
     }
 
     /**
@@ -95,35 +96,42 @@ class Yandex_Geo_Api {
         $this->_data_array = array('format' => 'json','lang'=>$this->language);
         $this->Set_Limit($this->result_limit);
         $this->_server_response = null;
+        return $this;
     }
 
     /**
      * Set limit of point detection
      * @param int $limit
+     * @return Yandex_Geo_Api
      */
     public function Set_Limit($limit = 1){
         $this->_data_array['results'] = $limit;
+        return $this;
     }
 
     /**
      * Set Point with coordinates longitude / latitude
      * @param $longitude
      * @param $latitude
+     * @return Yandex_Geo_Api
      */
     public function Set_Point($longitude, $latitude){
         $this->clear();
         $longitude = (float)$longitude;
         $latitude = (float)$latitude;
         $this->_data_array['geocode'] = sprintf('%f,%f', $longitude, $latitude);
+        return $this;
     }
 
     /**
      * Set Point with address Query
      * @param $query
+     * @return Yandex_Geo_Api
      */
     public function SetGeoCode($query){
         $this->clear();
         $query = $this->city." ".$query;
         $this->_data_array['geocode'] = (string)$query;
+        return $this;
     }
 }
