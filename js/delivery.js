@@ -26,6 +26,7 @@ function DoOnLoad()
 				document.querySelector('#store-date > input[type="date"]').value = date_input;
 				delVar("pending");
 				loadPoints();
+				reCalc();
 			}
 			else
 				new Dialog("Ошибка ответа сервера");
@@ -394,23 +395,25 @@ Point.prototype = {
 
                         body.time = {};
                         var _tdate = new Date();
-                        var _tel = (document.querySelector("#edit-order-time > input.time-from").value) ? document.querySelector("#edit-order-time > input.time-from").value : errmsg("Некорректное время начала");
-                        _tdate.setHours(_tel[0]+_tel[1], _tel[3]+_tel[4], 0);
-                        body.time.start = (_tdate.getHours() > 9) ? _tdate.getHours() : "0" + _tdate.getHours();
-                        body.time.start += ":";
-                        body.time.start += (_tdate.getMinutes() > 9) ? _tdate.getMinutes() : "0" + _tdate.getMinutes();
-                        body.time.start += ":";
-                        body.time.start += (_tdate.getSeconds() > 9) ? _tdate.getSeconds() : "0" + _tdate.getSeconds();
-
+                        var _tel = (!!document.querySelector("#edit-order-time > input.time-from").value) ? document.querySelector("#edit-order-time > input.time-from").value : rep_err("Некорректное время начала");
+						if (_tel != null) {
+							_tdate.setHours(_tel[0]+_tel[1], _tel[3]+_tel[4], 0);
+							body.time.start = (_tdate.getHours() > 9) ? _tdate.getHours() : "0" + _tdate.getHours();
+							body.time.start += ":";
+							body.time.start += (_tdate.getMinutes() > 9) ? _tdate.getMinutes() : "0" + _tdate.getMinutes();
+							body.time.start += ":";
+							body.time.start += (_tdate.getSeconds() > 9) ? _tdate.getSeconds() : "0" + _tdate.getSeconds();
+						}
                         var _tdate = new Date();
-						var _tel = (document.querySelector("#edit-order-time > input.time-to").value) ? document.querySelector("#edit-order-time > input.time-to").value : errmsg("Некорректное время окончания")
-                        _tdate.setHours(_tel[0]+_tel[1], _tel[3]+_tel[4], 0);
-                        body.time.end = (_tdate.getHours() > 9) ? _tdate.getHours() : "0" + _tdate.getHours();
-                        body.time.end += ":";
-                        body.time.end += (_tdate.getMinutes() > 9) ? _tdate.getMinutes() : "0" + _tdate.getMinutes();
-                        body.time.end += ":";
-                        body.time.end += (_tdate.getSeconds() > 9) ? _tdate.getSeconds() : "0" + _tdate.getSeconds();
-                        
+						var _tel = (!!document.querySelector("#edit-order-time > input.time-to").value) ? document.querySelector("#edit-order-time > input.time-to").value : rep_err("Некорректное время окончания");
+						if (_tel != null) {
+							_tdate.setHours(_tel[0]+_tel[1], _tel[3]+_tel[4], 0);
+							body.time.end = (_tdate.getHours() > 9) ? _tdate.getHours() : "0" + _tdate.getHours();
+							body.time.end += ":";
+							body.time.end += (_tdate.getMinutes() > 9) ? _tdate.getMinutes() : "0" + _tdate.getMinutes();
+							body.time.end += ":";
+							body.time.end += (_tdate.getSeconds() > 9) ? _tdate.getSeconds() : "0" + _tdate.getSeconds();
+						}
 						(body.time.start > body.time.end) && (rep_err("Неверное время"));
 						
                         body.phone = (document.querySelector('#edit-order-phone > input[type="tel"]').value) ? parseInt(document.querySelector('#edit-order-phone > input[type="tel"]').value) : null;
@@ -457,7 +460,7 @@ Point.prototype = {
 						else
 							((new Dialog(errmsg)) && (loader.purge()));
                     }
-                    catch (ex) { console.error(ex); new Dialog(ex.message); }
+                    catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
                 }
                 loader.create();
             }
@@ -591,6 +594,7 @@ Point.prototype = {
 			
 			(this.totalcost != void(0)) && (block.innerHTML += this.totalcost);
 			(this.mapObj != null) && (this.mapObj.geometry.setCoordinates([this.coordinates.latitude, this.coordinates.longitude]));
+			reCalc();
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
@@ -607,6 +611,7 @@ Point.prototype = {
 					setTimeout(function () {
 						_this.Object.remove();
 						Points.splice(Points.indexOf(_this),1);
+						reCalc();
 					}, 550);
 				}, 500);
 			}
@@ -677,4 +682,20 @@ function loadPoints()
 		req.do();
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
+}
+
+function reCalc()
+{
+	var totalcount = 0;
+	var totalcost = 0;
+	for (var i = 0; i < Points.length; i++) {
+		totalcount++;
+		for (var j=0; j<Points[i].items.length; j++)
+			totalcost += Points[i].items[j].cost;
+	}
+	document.querySelector("#right-footer > p:nth-child(1)").innerHTML = totalcount;
+	(totalcount == 1) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точка");
+	((totalcount > 1) && (totalcount < 5)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точки");
+	((totalcount == 0) || (totalcount > 4)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точек");
+	document.querySelector("#right-footer > p:nth-child(2)").innerHTML = "общей суммой " + totalcost;
 }
