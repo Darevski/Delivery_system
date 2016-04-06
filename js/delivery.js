@@ -10,6 +10,7 @@ ymaps.ready(function () {
 });
 function DoOnLoad()
 {
+    reCalc();
 	document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
 	document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
 	var req = new Request("/API/get_time");
@@ -356,6 +357,8 @@ Point.prototype = {
 			_temp.getElementsByClassName("button-save")[0].onclick = function () { _this.save(); }
 			_temp.style.opacity = "0";
 			document.body.appendChild(_temp);
+            document.querySelector("#edit-order-time > input.time-from").value = "17:00";
+            document.querySelector("#edit-order-time > input.time-to").value = "22:00";
 			setTimeout(function () { _temp.style.opacity = ""; }, 10);
         }
         catch (ex) { console.error(ex); new Dialog(ex.message); }
@@ -697,5 +700,5 @@ function reCalc()
 	(totalcount == 1) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точка");
 	((totalcount > 1) && (totalcount < 5)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точки");
 	((totalcount == 0) || (totalcount > 4)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точек");
-	document.querySelector("#right-footer > p:nth-child(2)").innerHTML = "общей суммой " + totalcost;
+	document.querySelector("#right-footer > p:nth-child(2)").innerHTML = "общей суммой " + totalcost.toFixed(3);
 }
