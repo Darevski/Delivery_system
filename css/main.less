@@ -187,6 +187,14 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	border-bottom: 2px solid @color-main;
 	transition: 0.5s;
 }
+.order-body input:disabled:hover
+{
+	border-bottom: 2px solid @color-main;
+}
+.order-body input:disabled
+{
+	background-color: @color-block;
+}
 .order-body input
 {
 	transition: 0.5s;
@@ -195,37 +203,31 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	border: none;
 	border-bottom: 2px solid @color-delimeter;
 }
-.order-adress-street
+.order-address-street
 {
-	width: 200px;
+	width: 220px;
 	padding: 0px 5px;
 	margin-right: 10px;
 }
-.order-adress-house
+.order-address-house
 {
-	width: 50px;
+	width: 80px;
 	text-align: center;
 	margin-right: 10px;
 }
-.order-adress-block
-{
-	width: 40px;
-	text-align: center;
-	margin-right: 10px;
-}
-.order-adress-entry
+.order-address-entry
 {
 	width: 40px;
 	text-align: center;
 	margin-right: 10px;
 }
-.order-adress-floor
+.order-address-floor
 {
 	width: 40px;
 	text-align: center;
 	margin-right: 10px;
 }
-.order-adress-flat
+.order-address-flat
 {
 	width: 40px;
 	text-align: center;
@@ -297,8 +299,8 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 }
 #right-footer p
 {
-	width: 180px;
-	padding-left: 150px;
+	width: 280px;
+	padding-left: 50px;
 	height: 40px;
 	line-height: 40px;
 }
@@ -345,7 +347,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	background-image: url("./icons/reset.png");
 	float: right;
 	width: 0;
-	opacity: 0;
+	opacity: 0.6;
 }
 .button-cancel
 {
@@ -357,7 +359,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	background-image: url("./icons/save.png");
 	float: right;
 	width: 0;
-	opacity: 0;
+	opacity: 0.6;
 }
 .add-floating-button:hover
 {
@@ -381,15 +383,16 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	background-position: center center;
 	box-shadow: 0 2px 10px -3px #000;
 }
-#add-order
+#edit-order
 {
 	position: fixed;
 	top: 0;
 	left: 0;
 	z-index: 1;
 	background-color: @color-main-shadow;
+	transition: 0.5s;
 }
-#add-order-window
+#edit-order-window
 {
 	background-color: @color-block;
 	width: 760px;
@@ -401,7 +404,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	box-shadow: 0 0 50px -5px #000;
 	padding: 0px 20px 10px 20px;
 }
-#add-order-window > p:first-child
+#edit-order-window > p:first-child
 {
 	width: 100%;
 	height: 40px;
@@ -409,12 +412,12 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	color: @color-main-shadow;
 	text-align: center;
 }
-#add-order-window input:focus
+#edit-order-window input:focus
 {
 	transition: 0.5s;
 	border-bottom: 2px solid @color-main;
 }
-#add-order-window input
+#edit-order-window input
 {
 	transition: 0.5s;
 	display: inline-block;
@@ -424,24 +427,24 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	border: none;
 	border-bottom: 2px solid @color-delimeter;
 }
-#add-order-adress-street
+#edit-order-address-street
 {
-	width: 380px;
+	width: 420px;
 	padding-left: 20px;
 }
-#add-order-adress-house
+#edit-order-address-house
 {
 	margin-left: 20px;
-	width: 60px;
+	width: 90px;
 	text-align: center;
 }
-#add-order-adress-block, #add-order-adress-entry, #add-order-adress-floor, #add-order-adress-flat
+#edit-order-address-entry, #edit-order-address-floor, #edit-order-address-flat
 {
 	margin-left: 20px;
 	width: 50px;
 	text-align: center;
 }
-#add-order-window p
+#edit-order-window p
 {
 	width: 250px;
 	height: 25px;
@@ -449,43 +452,43 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	display: inline-block;
 	vertical-align: top;
 }
-#add-order-time input
+#edit-order-time input
 {
 	width: 200px;
 	text-align: center;
 }
-#add-order-time
+#edit-order-time
 {
 	margin-top: 20px;
 	height: 25px;
 }
-#add-order-phone input
+#edit-order-phone input
 {
 	width: 500px;
 	padding-left: 10px;
 }
-#add-order-phone
+#edit-order-phone
 {
 	height: 25px;
 	margin-top: 20px;
 }
-#add-order-items .item input:first-child
+#edit-order-items .item input:first-child
 {
 	width: 350px;
 	padding-left: 20px;
 	margin-left: 10px;
 }
-#add-order-items .item input:nth-child(2)
+#edit-order-items .item input:nth-child(2)
 {
 	width: 220px;
 	padding-left: 20px;
 	margin-left: 20px;
 }
-#add-order-items .item input
+#edit-order-items .item input
 {
 	margin-top: 15px;
 }
-#add-order-items .item .button-delete
+#edit-order-items .item .button-delete
 {
 	float: right;
 	width: 30px;
@@ -493,7 +496,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	margin: 10px 10px 0 0;
 	background-size: 30px;
 }
-#add-order-items .item
+#edit-order-items .item
 {
 	box-shadow: 0 0 15px -5px #000;
 	background-color: @color-block;
@@ -504,19 +507,20 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	height: 50px;
 	width: 700px;
 }
-#add-order-items
+#edit-order-items
 {
 	height: 250px;
 	padding: 0 0 10px 0;
 	margin-top: 20px;
 	box-shadow: inset 0px 0 15px -5px #000;
 	background-color: @color-body;
+	overflow-y: auto;
 }
-#add-order-window .button-cancel:hover, #add-order-window .button-save:hover
+#edit-order-window .button-cancel:hover, #edit-order-window .button-save:hover
 {
 	opacity: 1;
 }
-#add-order-window .button-cancel, #add-order-window .button-save
+#edit-order-window .button-cancel, #edit-order-window .button-save
 {
 	opacity: 0.6;
 	width: 25px;
@@ -524,7 +528,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	background-size: 25px;
 	margin: 20px 0 0 10px;
 }
-#add-order-window .add-floating-button
+#edit-order-window .add-floating-button
 {
 	z-index: 3;
 	top: ~"calc(50% + 160px)";

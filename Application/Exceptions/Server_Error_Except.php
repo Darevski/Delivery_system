@@ -2,31 +2,26 @@
 /**
  * Created by PhpStorm.
  * User: darevski
- * Date: 19.03.16
- * Time: 1:02
+ * Date: 23.03.16
+ * Time: 19:50
  */
 
 namespace Application\Exceptions;
 
-/**
- * SQL_Except class implements handle the SQL exception`s
- * @package Application\Exceptions
- */
-class SQL_Except extends Main_Except{
 
+class Server_Error_Except extends Main_Except{
     /**
      * Error detection code and outputting appropriate page
-     * @param SQL_Except  $error received exception
+     * @param Server_Error_Except $error
      */
-    public function classification_error(SQL_Except $error){
+    public function exception_handling(Server_Error_Except $error){
         $data['title'] = '500 Internal Server Error';
-        $data['message'] = 'Ошибка работы БД';
+        $data['message'] = 'Внутренняя ошибка сервера';
         $data['debug_message'] = sprintf("error initialized in %s on line %s <br>
                                           with message '%s' <br>",
-            $error->getFile(),$error->getLine(),$error->getMessage());
+                                 $error->getFile(),$error->getLine(),$error->getMessage());
         $data['response_code'] = 500;
         $this->print_error($data);
         $this->action_log($error);
     }
-
 }

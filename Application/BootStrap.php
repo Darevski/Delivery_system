@@ -16,7 +16,7 @@ $Auto_Loader->addNamespace('Application\Core',$_SERVER['DOCUMENT_ROOT'].'/Applic
 $Auto_Loader->addNamespace('Application\Controllers',$_SERVER['DOCUMENT_ROOT'].'/Application/Controllers');
 $Auto_Loader->addNamespace('Application\Exceptions',$_SERVER['DOCUMENT_ROOT'].'/Application/Exceptions');
 $Auto_Loader->addNamespace('Application\Models',$_SERVER['DOCUMENT_ROOT'].'/Application/Models');
-
+$Auto_Loader->addNamespace('Application\Units',$_SERVER['DOCUMENT_ROOT'].'/Application/Units');
 $route_system = new Core\System\AltoRouter();
 // Register map of requests for Routing system
 // Method, route regex and point of target
@@ -34,7 +34,16 @@ catch (Exceptions\UFO_Except $error){
     $error->classification_error($error);
 }
 catch (Exceptions\SQL_Except $error){
-    echo $error->getMessage();
+    $error->classification_error($error);
+}
+catch (Exceptions\Curl_Except $error){
+    $error->exception_handling($error);
+}
+catch (Exceptions\Model_Except $error){
+    $error->exception_handling($error);
+}
+catch (Exceptions\Server_Error_Except $error){
+    $error->exception_handling($error);
 }
 catch (Exceptions\Main_Except $error){
     echo $error->getMessage();
