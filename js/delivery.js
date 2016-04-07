@@ -710,9 +710,9 @@ function calcRoutes() {
 			setVar("pending", true);
 			var timeMatrix = [];
 			var counter = Points.length * (Points.length - 1);
-			for (var i = 0; i < Points.length; i++) {
+			for (var i = 0; i < Points.length+1; i++) {
 				timeMatrix[i] = [];
-				for (var j = 0; j < Points.length; j++)
+				for (var j = 0; j < Points.length+1; j++)
 					timeMatrix[i][j] = null;
 			}
 			Points.forEach(function (item, i) {
@@ -722,25 +722,28 @@ function calcRoutes() {
 							function (route) {
 								myMap.geoObjects.add(route);
 								counter--;
-								timeMatrix[i][j] = route.properties.getAll().RouterRouteMetaData.jamsTime;
+								timeMatrix[i+1][j+1] = route.properties.getAll().RouterRouteMetaData.jamsTime;
 								if (counter == 0) {
-									console.table(timeMatrix);
 									/* Устанавливаем координаты начальной точки (склада) TODO: получать из списка*/
 									var lat = 53.91667;
 									var lon = 27.55000;
 									var counter1 = Points.length;
 									var infoArray = [];
 									Points.forEach(function (item, u) {
-										ymaps.route([[lat,lon], [Points[i].coordinates.latitude, Points[i].coordinates.longitude]], {avoidTrafficJams: true}).then(
+										ymaps.route([[lat,lon], [Points[u].coordinates.latitude, Points[u].coordinates.longitude]], {avoidTrafficJams: true}).then(
 											function (route) {
 												counter1--;
+                                                timeMatrix[0][u+1] = route.properties.getAll().RouterRouteMetaData.jamsTime;
 												infoArray[u] = {
-													timeto: route.properties.getAll().RouterRouteMetaData.jamsTime,
-													time_start: Points[u].time.start,
-													time_end: Points[u].time.end
+                                                    point_id: Points[u].id,
+                                                    time_start: (parseInt(Points[u].time.start[0] + Points[u].time.start[1]) * 60 * 60) + (parseInt(Points[u].time.start[3] + Points[u].time.start[4]) * 60) + (parseInt(Points[u].time.start[6] + Points[u].time.start[7])),
+													time_end: (parseInt(Points[u].time.end[0] + Points[u].time.end[1]) * 60 * 60) + (parseInt(Points[u].time.end[3] + Points[u].time.end[4]) * 60) + (parseInt(Points[u].time.end[6] + Points[u].time.end[7]))
 												}
 												myMap.geoObjects.add(route);
-												(counter1 == 0) && (console.table(infoArray));
+												if (counter1 == 0) {
+                                                    console.table(infoArray);
+                                                    console.table(timeMatrix);
+                                                }
 											},
 											function (error) {
 												new Dialog('Возникла ошибка: ' + error.message);
