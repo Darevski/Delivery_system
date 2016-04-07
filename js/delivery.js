@@ -13,6 +13,7 @@ function DoOnLoad()
     reCalc();
 	document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
 	document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
+    document.querySelector('#calculate').onclick = calcRoutes;
 	var req = new Request("/API/get_time");
 	req.callback = function (Response) {
 		try {
@@ -701,4 +702,61 @@ function reCalc()
 	((totalcount > 1) && (totalcount < 5)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точки");
 	((totalcount == 0) || (totalcount > 4)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точек");
 	document.querySelector("#right-footer > p:nth-child(2)").innerHTML = "общей суммой " + totalcost.toFixed(3);
+}
+
+function calcRoutes() {
+	try {
+		if (getVar("pending") == false) {
+			setVar("pending", true);
+			var timeMatrix = [];
+			var counter = Points.length * (Points.length - 1);
+			for (var i = 0; i < Points.length; i++) {
+				timeMatrix[i] = [];
+				for (var j = 0; j < Points.length; j++)
+					timeMatrix[i][j] = null;
+			}
+			Points.forEach(function (item, i) {
+				Points.forEach(function (item, j) {
+					if (i != j)
+						ymaps.route([[Points[i].coordinates.latitude, Points[i].coordinates.longitude], [Points[j].coordinates.latitude, Points[j].coordinates.longitude]], {avoidTrafficJams: true}).then(
+							function (route) {
+								myMap.geoObjects.add(route);
+								counter--;
+								timeMatrix[i][j] = route.properties.getAll().RouterRouteMetaData.jamsTime;
+								if (counter == 0) {
+									console.table(timeMatrix);
+									/* Устанавливаем координаты начальной точки (склада) TODO: получать из списка*/
+									var lat = 53.91667;
+									var lon = 27.55000;
+									var counter1 = Points.length;
+									var infoArray = [];
+									Points.forEach(function (item, u) {
+										ymaps.route([[lat,lon], [Points[i].coordinates.latitude, Points[i].coordinates.longitude]], {avoidTrafficJams: true}).then(
+											function (route) {
+												counter1--;
+												infoArray[u] = {
+													timeto: route.properties.getAll().RouterRouteMetaData.jamsTime,
+													time_start: Points[u].time.start,
+													time_end: Points[u].time.end
+												}
+												myMap.geoObjects.add(route);
+												(counter1 == 0) && (console.table(infoArray));
+											},
+											function (error) {
+												new Dialog('Возникла ошибка: ' + error.message);
+											}
+										);
+									});
+								}
+							},
+							function (error) {
+								new Dialog('Возникла ошибка: ' + error.message);
+							}
+						);
+
+				});
+			});
+		}
+	}
+	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
