@@ -728,8 +728,8 @@ function calcRoutes() {
 								timeMatrix[i+1][j+1] = route.properties.getAll().RouterRouteMetaData.jamsTime;
 								if (counter == 0) {
 									/* Устанавливаем координаты начальной точки (склада) TODO: получать из списка*/
-									var lat = 53.91667;
-									var lon = 27.55000;
+									var lat = 53.9383;
+									var lon = 27.5783;
 									var counter1 = Points.length;
 									var infoArray = [];
 									Points.forEach(function (item, u) {
