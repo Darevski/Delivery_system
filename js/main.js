@@ -92,9 +92,11 @@ Request.prototype = {
 /** Создает информационное окно
 * @class
 * @param {string} message Сообщение
+* @param {Array} options Набор дополнительных кнопок. Состоит из { text: "Текст кнопки", func: { Тело функции } }
 */
-function Dialog(message)
+function Dialog(message, options)
 {
+	this.options = (options != undefined) ? options.reverse() : [];
 	this.message = (message) ? message : "Что-то пошло не так";
 	this.create();
 }
@@ -123,12 +125,26 @@ Dialog.prototype = {
 			_temp.innerHTML = this.message;
 			this.element.children[0].appendChild(_temp);
 			
+			var _controls = document.createElement("div");
+			_controls.setAttribute("class","ex-controls");
+			
 			var _temp = document.createElement("div");
 			_temp.setAttribute("class", "ex-button");
 			_temp.innerHTML = "OK";
 			_temp.onclick = function () { _this.DialogClear(); }
-			this.element.children[0].appendChild(_temp);
+			_controls.appendChild(_temp);
 			
+			for (var i = 0; i<this.options.length; i++)
+				{
+					var _temp = document.createElement("div");
+					_temp.setAttribute("class", "ex-button");
+					_temp.innerHTML = this.options[i].text;
+					var _func = this.options[i].func;
+					_temp.onclick = function () { _func(); _this.DialogClear(); }
+					_controls.appendChild(_temp);
+				}
+			
+			this.element.children[0].appendChild(_controls);
 			document.body.appendChild(this.element);
 			setTimeout(function () {
 				try {
