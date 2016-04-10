@@ -138,7 +138,7 @@ Dialog.prototype = {
 				{
 					var _temp = document.createElement("div");
 					_temp.setAttribute("class", "ex-button");
-					_temp.innerHTML = this.options[i].text;
+					_temp.innerHTML = this.options[i].text.toUpperCase();
 					var _func = this.options[i].func;
 					_temp.onclick = function () { _func(); _this.DialogClear(); }
 					_controls.appendChild(_temp);

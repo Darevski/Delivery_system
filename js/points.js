@@ -10,71 +10,72 @@ ymaps.ready(function () {
 });
 function DoOnLoad()
 {
-	/* Меню */
-	var top_tabs = document.getElementById("tab-bar").children;
-	top_tabs[0].onclick = function () { window.location.href = "/"; }
-	top_tabs[1].onclick = function () { window.location.href = "/Route"; }
-    reCalc();
-	document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
-	document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
-    document.querySelector('#calculate').onclick = calcRoutes;
-	var req = new Request("/API/get_time");
-	req.callback = function (Response) {
-		try {
-			var answer = JSON.parse(Response);
-			if (answer.data) {
-				var _t = new Date(answer.data * 1000);
-				var date_input = _t.getFullYear() + "-";
-				(_t.getMonth() < 10) && (date_input += "0");
-				date_input += (_t.getMonth() + 1) + "-";
-				(_t.getDate() < 10) && (date_input += "0");
-				date_input += _t.getDate();
-				document.querySelector('#store-date > input[type="date"]').value = date_input;
-				delVar("pending");
-				loadPoints();
-				reCalc();
+	try {
+		/* Меню */
+		var top_tabs = document.getElementById("tab-bar").children;
+		top_tabs[0].onclick = function () { window.location.href = "/"; }
+		top_tabs[1].onclick = function () { window.location.href = "/Route"; }
+		reCalc();
+		document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
+		document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
+		document.querySelector('#calculate').onclick = calcRoutes;
+		var req = new Request("/API/get_time");
+		req.callback = function (Response) {
+			try {
+				var answer = JSON.parse(Response);
+				if (answer.data) {
+					var _t = new Date(answer.data * 1000);
+					var date_input = _t.getFullYear() + "-";
+					(_t.getMonth() < 10) && (date_input += "0");
+					date_input += (_t.getMonth() + 1) + "-";
+					(_t.getDate() < 10) && (date_input += "0");
+					date_input += _t.getDate();
+					document.querySelector('#store-date > input[type="date"]').value = date_input;
+					delVar("pending");
+					loadPoints();
+					reCalc();
+				}
+				else
+					new Dialog("Ошибка ответа сервера");
 			}
-			else
-				new Dialog("Ошибка ответа сервера");
+			catch (ex) { console.error(ex); new Dialog(ex.message); }
 		}
-		catch (ex) { console.error(ex); new Dialog(ex.message); }
+		req.do();
 	}
-	req.do();
+	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
 
 function Point()
 {
-	this.address = {
-		street: null,
-		house: null,
-		block: null,
-		entry: null,
-		floor: null,
-		flat: null
+	try {
+		this.address = {
+			street: null,
+			house: null,
+			block: null,
+			entry: null,
+			floor: null,
+			flat: null
+}
+		this.time = {
+			start: null,
+			end: null
+}
+		this.phone = null;
+		this.items = [];
+		this.totalcost = null;
+		this.isOpen = false;
+		this.Object = null;
+		this.id = null;
+		this.isAdded = false;
+		this.map_id = (Points.length == 0) ? 1 : (Points[Points.length-1].map_id + 1);
+		this.uniq = null;
+		this.coordinates = {
+			longitude: null,
+			latitude: null
+		}
+		this.mapObj = null;
 	}
-	
-	this.time = {
-		start: null,
-		end: null
-	}
-	
-	this.phone = null;
-	this.items = [];
-	
-	this.totalcost = null;
-	this.isOpen = false;
-	
-	this.Object = null;
-	this.id = null;
-	this.isAdded = false;
-	this.map_id = (Points.length == 0) ? 1 : (Points[Points.length-1].map_id + 1);
-	this.uniq = null;
-	
-	this.coordinates = {
-		longitude: null,
-		latitude: null
-	}
-    this.mapObj = null;
+	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
 Point.prototype = {
 	toggle: function () {
@@ -273,91 +274,100 @@ Point.prototype = {
 					el.children[1].value = this.items[i].cost;
 					var item = this.items[i];
 					el.children[2].onclick = function () {
-						var body = { order_id: item.order_id }
-						var req = new Request("/Orders/delete_order", body);
-						var __this = this;
-                        var _onclick = this.onclick;
-                        this.onclick = void(0);
-						req.callback = function (Response) {
-							try {
-								var answer = JSON.parse(Response);
-								if (answer.data.state == "success") {
-									__this.parentNode.remove();
-									_this.items.splice(_this.items.indexOf(item),1);
+						try {
+							var body = { order_id: item.order_id }
+							var req = new Request("/Orders/delete_order", body);
+							var __this = this;
+							var _onclick = this.onclick;
+							this.onclick = void(0);
+							req.callback = function (Response) {
+								try {
+									var answer = JSON.parse(Response);
+									if (answer.data.state == "success") {
+										__this.parentNode.remove();
+										_this.items.splice(_this.items.indexOf(item),1);
+									}
+									else {
+										new Dialog(answer.data.message);
+										__this.onclick = _onclick;
+									}
 								}
-								else {
-									new Dialog(answer.data.message);
-                                    __this.onclick = _onclick;
-                                }
+								catch (ex) { console.error(ex); new Dialog(ex.message); }
 							}
-							catch (ex) { console.error(ex); new Dialog(ex.message); }
+							req.do();
 						}
-						req.do();
+						catch (ex) { console.error(ex); new Dialog(ex.message); }
 					}
 					_temp.getElementsByTagName("div")[3].appendChild(el);
 				}
 			_temp.getElementsByClassName("add-floating-button")[0].onclick = function () {
-				var body = {
-					point_id: _this.id,
-					description: "",
-					cost: 0
-				}
-				var __this = this;
-				var req = new Request("/Orders/add_order", body);
-				req.callback = function (Response) {
-					try {
-						var answer = JSON.parse(Response);
-						if (answer.data.state == "success") {
-							var item = {/* TODO считать из ответа сервера */
-								order_id: answer.data.order_id,
-								description: "",
-								cost: 0
-							}
-							_this.items.push(item);
-							var el = document.createElement("div");
-							el.setAttribute("class", "item");
-							el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
-							el.children[2].onclick = function () {
-                            var body = { order_id: item.order_id }
-								var req = new Request("/Orders/delete_order", body);
-								var __this = this;
-                                var _onclick = this.onclick;
-                                this.onclick = void(0);
-                                req.callback = function (Response) {
-                                    try {
-                                        var answer = JSON.parse(Response);
-                                        if (answer.data.state == "success") {
-                                            __this.parentNode.remove();
-                                            _this.items.splice(_this.items.indexOf(item),1);
-                                        }
-                                        else {
-                                            new Dialog(answer.data.message);
-                                            __this.onclick = _onclick;
-                                        }
-                                    }
-									catch (ex) { console.error(ex); new Dialog(ex.message); }
-								}
-								req.do();
-							}
-							document.getElementById("edit-order-items").appendChild(el);
-						}
-						else
-							new Dialog(answer.data.message);
+				try {
+					var body = {
+						point_id: _this.id,
+						description: "",
+						cost: 0
 					}
-					catch (ex) { console.error(ex); new Dialog(ex.message); }
+					var __this = this;
+					var req = new Request("/Orders/add_order", body);
+					req.callback = function (Response) {
+						try {
+								var answer = JSON.parse(Response);
+								if (answer.data.state == "success") {
+									var item = {/* TODO считать из ответа сервера */
+										order_id: answer.data.order_id,
+										description: "",
+										cost: 0
+									}
+									_this.items.push(item);
+									var el = document.createElement("div");
+									el.setAttribute("class", "item");
+									el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
+									el.children[2].onclick = function () {
+									var body = { order_id: item.order_id }
+										var req = new Request("/Orders/delete_order", body);
+										var __this = this;
+										var _onclick = this.onclick;
+										this.onclick = void(0);
+										req.callback = function (Response) {
+											try {
+												var answer = JSON.parse(Response);
+												if (answer.data.state == "success") {
+													__this.parentNode.remove();
+													_this.items.splice(_this.items.indexOf(item),1);
+												}
+												else {
+													new Dialog(answer.data.message);
+													__this.onclick = _onclick;
+												}
+											}
+											catch (ex) { console.error(ex); new Dialog(ex.message); }
+										}
+										req.do();
+									}
+									document.getElementById("edit-order-items").appendChild(el);
+								}
+								else
+									new Dialog(answer.data.message);
+							}
+						catch (ex) { console.error(ex); new Dialog(ex.message); }
+					}
+					req.do();
 				}
-				req.do();
+				catch (ex) { console.error(ex); new Dialog(ex.message); }
 			}
 			_temp.getElementsByClassName("button-cancel")[0].onclick = function () {
-                if (_this.isAdded)
-                    {
-						_this.load();
-                        this.parentNode.parentNode.style.opacity = "0";
-                        var _t = this;
-                        setTimeout(function () { _t.parentNode.parentNode.remove(); }, 550);
-                    }
-                else
-                    _this.delete();
+				try {
+					if (_this.isAdded)
+						{
+							_this.load();
+							this.parentNode.parentNode.style.opacity = "0";
+							var _t = this;
+							setTimeout(function () { _t.parentNode.parentNode.remove(); }, 550);
+						}
+					else
+						_this.delete();
+				}
+				catch (ex) { console.error(ex); new Dialog(ex.message); }
             }
 			_temp.getElementsByClassName("button-save")[0].onclick = function () { _this.save(); }
 			_temp.style.opacity = "0";
@@ -454,19 +464,18 @@ Point.prototype = {
                                                     }
                                                     else { loader.purge(); new Dialog(answer.data.message); }
                                                 }
-                                                catch (ex) { console.error(ex); new Dialog(ex.message); }
+                                                catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
                                             }
                                             req1.do();
                                         }
                                     }
                                 else { loader.purge(); new Dialog(answer.data.message); }
                             }
-                            catch (ex) { console.error(ex); new Dialog(ex.message); }
+                            catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
                         }
                         if (_send)
 							req.do();
-						else
-							((new Dialog(errmsg)) && (loader.purge()));
+						else { new Dialog(errmsg); loader.purge();}
                     }
                     catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
                 }
@@ -612,15 +621,21 @@ Point.prototype = {
 				var _this = this;
 				this.Object.style.marginLeft = "-600px";
 				setTimeout(function () {
-					_this.Object.style.height = "0px";
-					_this.Object.style.margin = "-20px 0 0 -600px";
-					_this.Object.style.padding = "0";
-					myMap.geoObjects.remove(_this.mapObj);
-					setTimeout(function () {
-						_this.Object.remove();
-						Points.splice(Points.indexOf(_this),1);
-						reCalc();
-					}, 550);
+					try {
+						_this.Object.style.height = "0px";
+						document.querySelector('#orderlist').children[0] == _this.Object ? _this.Object.style.marginLeft = "-600px" : _this.Object.style.margin = "-20px 0 0 -600px";
+						_this.Object.style.padding = "0";
+						myMap.geoObjects.remove(_this.mapObj);
+						setTimeout(function () {
+							try {
+								_this.Object.remove();
+								Points.splice(Points.indexOf(_this),1);
+								reCalc();
+							}
+							catch (ex) { console.error(ex); new Dialog(ex.message); }
+						}, 550);
+					}
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
 				}, 500);
 			}
 		}
@@ -648,9 +663,7 @@ function PreparePoint()
 								delVar("pending");
 							}
 						else
-							{
-								new Dialog(ans.data.message);
-							}
+							new Dialog(ans.data.message);
 					}
 					catch (ex) { console.error(ex); new Dialog(ex.message); }
 				}
@@ -694,18 +707,21 @@ function loadPoints()
 
 function reCalc()
 {
-	var totalcount = 0;
-	var totalcost = 0;
-	for (var i = 0; i < Points.length; i++) {
-		totalcount++;
-		for (var j=0; j<Points[i].items.length; j++)
-			totalcost += Points[i].items[j].cost;
+	try {
+		var totalcount = 0;
+		var totalcost = 0;
+		for (var i = 0; i < Points.length; i++) {
+			totalcount++;
+			for (var j=0; j<Points[i].items.length; j++)
+				totalcost += Points[i].items[j].cost;
+		}
+		document.querySelector("#right-footer > p:nth-child(1)").innerHTML = totalcount;
+		(totalcount == 1) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точка");
+		((totalcount > 1) && (totalcount < 5)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точки");
+		((totalcount == 0) || (totalcount > 4)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точек");
+		document.querySelector("#right-footer > p:nth-child(2)").innerHTML = "общей суммой " + totalcost.toFixed(3);
 	}
-	document.querySelector("#right-footer > p:nth-child(1)").innerHTML = totalcount;
-	(totalcount == 1) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точка");
-	((totalcount > 1) && (totalcount < 5)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точки");
-	((totalcount == 0) || (totalcount > 4)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точек");
-	document.querySelector("#right-footer > p:nth-child(2)").innerHTML = "общей суммой " + totalcost.toFixed(3);
+	_this.Object.style.margin = "-20px 0 0 -600px"
 }
 function calcRoutes() {
 	try {
@@ -717,6 +733,7 @@ function calcRoutes() {
 			}
 			var loader = new PreLoader();
 			loader.inprogress = function () {
+				try {
 				var req = new Request("/Route/get_routes", body);
 				req.callback = function (Response) {
 					try {
@@ -806,6 +823,8 @@ function calcRoutes() {
 					catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
 				}
 				req.do();
+				}
+				catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
 			}
 			loader.create();
 		}
