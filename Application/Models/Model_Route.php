@@ -30,7 +30,7 @@ class Model_Route extends Model{
      * default 15 min
      * @var int
      */
-    private $time_for_delivery = 600;
+    private $time_for_delivery = 900;
 
     /**
      * Convert time in config to seconds
@@ -51,6 +51,7 @@ class Model_Route extends Model{
      * @param $points
      * @param $timeMatrix
      * @return array
+     * @throws Model_Except
      */
     private function calculate_route($points,$timeMatrix){
         $used_points = array();
@@ -59,6 +60,11 @@ class Model_Route extends Model{
 
         $path = array();
         $calculation = true;
+        // Check that we can enter this point from warehouse
+        for ($i =0 ;$i< count($timeMatrix[0]);$i++)
+            if ($timeMatrix[0][$i] != null)
+                if ($timeMatrix[0][$i] + $this->time_start_delivery > $points[$i-1]['time_end'])
+                    throw new Model_Except("Для точки $i задано не выполнимое условие по времени доставки");
 
         while ($calculation){
             $bestPath = $this->routeByTime(-1, $this->time_start_delivery, array(),$used_points, $timeMatrix, $points);
@@ -90,6 +96,17 @@ class Model_Route extends Model{
         return (($a['time']==null) || ($b['time'] == null)) ? (($a['time'] == null) ? 1 : -1) : ($a['time'] - $b['time']);
     }
 
+    /**
+     * Recursive algorithm of calculating Route
+     * Магия в чистом виде, не трогать и не пытаться понять
+     * @param $position
+     * @param $time
+     * @param $path
+     * @param $usedArray
+     * @param $timeMatrix
+     * @param $points
+     * @return array|null
+     */
     private function routeByTime($position,$time,$path,$usedArray,$timeMatrix,$points){
         // Определение точки из которой двигаемся -1 - склад
         ($position != -1) ? ($usedArray[$position-1]=true) : ($position = 0);
@@ -106,17 +123,21 @@ class Model_Route extends Model{
         // сортировка по возрастанию
         usort($temp,array($this,'callback_sort_by_time'));
 
-
+        $best = null;
         for ($i = 0; $i < count($temp);$i++){
             // Если мы можем попаст в точку
             if ($temp[$i]['time']!= null)
-                // и это точка не склад
+                // и это точка доступна
                 if (!$usedArray[$temp[$i]['index']-1])
                     // Если курьер поподает по времени
                     if ($time + $temp[$i]['time'] < $points[$temp[$i]['index']-1]['time_end']){
                         // ожидаем при приезде раньше времени
+
+                        $time_temp = $time;
+                        ($position == 0) ? ($time_temp+=$temp[$i]['time']) : ($time_temp+=$temp[$i]['time']+$this->time_for_delivery);
                         if ($time + $temp[$i]['time'] < $points[$temp[$i]['index']-1]['time_start'])
-                            $time = $points[$temp[$i]['index']-1]['time_start'];
+                            $time_temp = $points[$temp[$i]['index']-1]['time_start']+$this->time_start_delivery;
+
                         $canmove = true;
 
                         // добавляем точку в путь
@@ -125,12 +146,21 @@ class Model_Route extends Model{
                         $path_info['time'] = $time + $temp[$i]['time'];
                         $_path[] = $path_info;
                         // Рекурсивная обработка с учетом времени затраченного на доставку
-                        return $this->routeByTime($temp[$i]['index'],($time + $temp[$i]['time']+$this->time_for_delivery),$_path, $usedArray,$timeMatrix,$points);
+                        $temp_path = $this->routeByTime($temp[$i]['index'],($time + $temp[$i]['time']+$this->time_for_delivery),$_path, $usedArray,$timeMatrix,$points);
+                        if ($best == null)
+                            $best = $temp_path;
+                        else
+                            if (count($best['path']) < count($temp_path['path']))
+                                if (count($temp_path['path'])*($best['time']/count($best['path'])) > ($temp_path['time']/count($temp_path['path'])))
+                                    $best = $temp_path;
+
                     }
         }
         if (!$canmove){
            return $answer;
         }
+        else
+            return $best;
     }
 
     /**
@@ -162,8 +192,8 @@ class Model_Route extends Model{
                     $point_info = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
                     $point['latitude'] = $point_info['point_info']['latitude'];
                     $point['longitude'] = $point_info['point_info']['longitude'];
-                    $point['time_start'] = $point_info['point_info']['time_start'];
-                    $point['time_end'] = $point_info['point_info']['time_end'];
+                    //$point['time_start'] = $point_info['point_info']['time_start'];
+                    //$point['time_end'] = $point_info['point_info']['time_end'];
                     $point['address'] = $point_info['point_info']['street'] . ' ' . $point_info['point_info']['house'];
                     $point['time'] = $dot['time'];
                     $route['points'][] = $point;
@@ -176,7 +206,7 @@ class Model_Route extends Model{
             unset($ways,$route,$point,$point_info,$value,$way,$dot);
 
             // save calculated routes into database
-            $this->save_route($tracks, $date);
+            //$this->save_route($tracks, $date);
         }
     }
 
