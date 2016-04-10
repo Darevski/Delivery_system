@@ -14,6 +14,7 @@ function DoOnLoad()
 	var top_tabs = document.getElementById("tab-bar").children;
 	top_tabs[0].onclick = function () { window.location.href = "/"; }
 	top_tabs[1].onclick = function () { window.location.href = "/Route"; }
+	document.querySelector('#store-date > input[type="date"]').onchange = loadOnDate;
 	var req = new Request("/API/get_time");
 	req.callback = function (Response) {
 		try {
@@ -42,7 +43,7 @@ function Route()
 	this.route = null;
 	this.isOpen = false;
 	this.isAdded = false;
-	this.id = null;
+	this.id = Routes.length+1;
 	this.totalTime = null;
 }
 Route.prototype = {
@@ -52,7 +53,7 @@ Route.prototype = {
 				this.isOpen = true;
 				this.block.style.height = ((40*this.paths.length) + 50) + "px";
 				this.block.children[0].style.backgroundColor = "#03a9f4";
-				//this.showOnMap();
+				this.showOnMap();
 			}
 			else {
 				this.isOpen = false;
@@ -80,7 +81,8 @@ Route.prototype = {
 			(this.paths.length == 1) && (_temp.innerHTML += " точка, ");
 			((this.paths.length > 1) && (this.paths.length < 5)) && (_temp.innerHTML += " точки, ");
 			((this.paths.length == 0) || (this.paths.length > 4)) && (_temp.innerHTML += " точек, ");
-			_temp.innerHTML += this.totalTime;
+			var h = Math.floor(this.totalTime / 3600);
+			_temp.innerHTML += h + "ч " + Math.floor((this.totalTime - (h*3600)) / 60) + "м";
 
 			var _temp = elem.getElementsByClassName("path-body")[0];
 
@@ -89,11 +91,14 @@ Route.prototype = {
 				el.setAttribute("class", "path-segment");
 
 				var _p = document.createElement("p");
-				_p.innerHTML = this.paths[i].id + ". " + this.paths[i].address;
+				_p.innerHTML = (i+1) + ". " + this.paths[i].address;
 				el.appendChild(_p);
 
 				var _p = document.createElement("p");
-				_p.innerHTML = this.paths[i].arrive_time;
+				var h = Math.floor(this.paths[i].time / 3600);
+				var m = Math.floor((this.paths[i].time - (h*3600)) / 60);
+				(m < 10) && (m = "0" + m);
+				_p.innerHTML += h + ":" + m;
 				el.appendChild(_p);
 
 				_temp.appendChild(el);
@@ -109,7 +114,7 @@ Route.prototype = {
 				setTimeout(function () {
 					_block.style.marginLeft = "";
 				}, 500);
-			}, 10);
+			}, 100);
 		}
 	},
 	select: function () {
@@ -118,9 +123,6 @@ Route.prototype = {
 				if (Routes[i].isOpen)
 					Routes[i].toggle();
 		this.toggle();
-	},
-	load: function () {
-		//TODO: загрузка с сервера
 	},
 	delete: function () {
 		var _this = this;
@@ -137,4 +139,55 @@ Route.prototype = {
 			}, 500);
 		}, 300);
 	}
+}
+
+function loadOnDate()
+{
+	try{
+		var mainlat = 53.9383;
+		var mainlon = 27.5783;
+		for (var i = 0; i<Routes.length; i++)
+			Routes[i].delete();
+		setTimeout(function (){
+			var body = {
+				date: new Date(document.querySelector('#store-date > input[type="date"]').value)
+			}
+			var req = new Request("/Route/get_routes", body);
+			req.callback = function (Response) {
+				try {
+					var answer = JSON.parse(Response);
+					if (answer.data.state == "success")
+						{
+							answer.data.routes.forEach(function (item, i) 
+								{
+									var temp = new Route();
+									temp.paths = answer.data.routes[i].points;
+									var path = [[mainlat,mainlon]];
+									temp.totalTime = answer.data.routes[i].total_time - 64800;
+									temp.create();
+									for (var j = 0; j<temp.paths.length; j++)
+										path.push([temp.paths[j].latitude, temp.paths[j].longitude]);
+									ymaps.route(path).then(
+										function (route) {
+											var wayPoints = route.getWayPoints();
+											for (var j = 0; j<wayPoints.getLength(); j++)
+                                            	wayPoints.get(j).properties.set('iconContent', j);
+											wayPoints.get(0).properties.set('iconContent', "С");
+											Routes[Routes.indexOf(temp)].route = route;
+										},
+										function (error) {
+											new Dialog('Возникла ошибка: ' + error.message);
+										}
+									);
+								});
+						}
+					else
+						new Dialog(answer.data.message);
+				}
+				catch (ex) { console.error(ex); new Dialog(ex.message); }
+			}
+			req.do();
+		}, 10);
+	}
+	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
