@@ -147,6 +147,31 @@ class Controller_Route extends Controller
         View::output_json($result);
     }
 
+    /**
+     * Feature is in development
+     * @throws UFO_Except
+     */
+    private function action_get_pdf_routes(){
+        // Example Post Request
+        $input_json = '{"date":1459448664}';
+
+        //$input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+        $decoded_json = $this->Filter_unit->decode_Json($input_json);
+
+        $validate_map = array(
+            'date' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE)
+        );
+
+        $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
+        // Checking that date is correct
+        if ($this->Filter_unit->date_check($valid_arr['date']) === false)
+            throw new UFO_Except("Incorrect date in Json",400);
+
+        $routes = $this->Model_Route->get_route_by_date($valid_arr['date']);
+        $result['routes'] = $routes;
+        $result['state'] = 'success';
+        View::output_json($result);
+    }
 
     /**
      * Display route calculation interface

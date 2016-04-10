@@ -11,6 +11,7 @@ namespace Application\Models;
 use Application\Core\Model;
 use Application\Core\System\Config;
 use Application\Exceptions\Model_Except;
+use Application\Units\FPDF;
 
 /**
  * Class Model_Route include business logic related with routes
@@ -44,6 +45,112 @@ class Model_Route extends Model{
         $this->time_for_delivery = ($hours * 3600 ) + ($min * 60 ) + $sec;
         list($hours, $min, $sec) = explode(':', $config['time_start_delivery']);
         $this->time_start_delivery = ($hours * 3600 ) + ($min * 60 ) + $sec;
+    }
+
+    /**
+     * Feature is in development
+     * Don`t use it
+     */
+   public function get_pdf($date){
+        $pdf_unit = new FPDF();
+        $model_orders = new Model_Orders();
+        $pdf_unit->SetTitle('Маршруты доставки');
+        $pdf_unit->SetAuthor('Delivery_System');
+        $pdf_unit->SetTextColor(50,60,100);
+
+        $routes = $this->get_route_by_date($date);
+        $height = 20;
+        foreach ($routes as $key=>$route){
+            $hours = floor($route['total_time']/3600);
+            $minutes = floor(($route['total_time'] - $hours*3600)/60);
+            $route_number = $key+1;
+
+            $pdf_unit->AddPage('P');
+            $pdf_unit->SetFont('Helvetica','B',20);
+            $pdf_unit->SetXY(20,$height);
+            $pdf_unit->Write(10,"Маршрут №$route_number занимает времени: $hours:$minutes");
+
+            $height+=20;
+            foreach ($route['points'] as $point){
+                $pdf_unit->SetXY(50,$height);
+                $pdf_unit->SetFont('Helvetica','',14);
+                $pdf_unit->Write(10,'Адрес доставки: ');
+                $model_orders->get_list_orders_by_point_id($point['point_id']);
+            }
+        }
+
+    }
+
+    /**
+     * Checks an existing routes and if it`s not existing
+     * calculate new route and write into database
+     * @param $points array {[int point_id, int time_start , int time_end],[]....}
+     * @param $timeMatrix [[int/null],[int/null].....]
+     * @param $date int unix timestamp
+     * @throws Model_Except
+     * @return mixed
+     */
+    public function handling_route($points,$timeMatrix,$date){
+        // Check on existing routes
+        // If there is no routes then calculate new route
+        if (!$this->checks_existence_route($date)) {
+
+           $model_points = new Model_Delivery_Points();
+            //check exciting points in Database
+            foreach ($points as $value)
+                if (!$model_points->isset_point($value['point_id']))
+                    throw new Model_Except("Одной из выбранных точек не существует в БД");
+            // Get paths by algorithm
+            $ways = $this->calculate_route($points, $timeMatrix);
+            $tracks = array();
+
+            // get info about delivery point && path
+            foreach ($ways as $way) {
+                foreach ($way['path'] as $dot) {
+                    $point_info = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
+                    $point['point_id'] = $points[$dot['index_point']]['point_id'];
+                    $point['latitude'] = $point_info['point_info']['latitude'];
+                    $point['longitude'] = $point_info['point_info']['longitude'];
+                    //$point['time_start'] = $point_info['point_info']['time_start'];
+                    //$point['time_end'] = $point_info['point_info']['time_end'];
+                    $point['address'] = $point_info['point_info']['street'] . ' ' . $point_info['point_info']['house'];
+                    $point['time'] = $dot['time'];
+                    $route['points'][] = $point;
+                }
+                $route['total_time']=$way['total_time'];
+                $tracks[] = $route;
+                $route = array();
+            }
+            //delete useless variables
+            unset($ways,$route,$point,$point_info,$value,$way,$dot);
+
+            // save calculated routes into database
+            $this->save_route($tracks, $date);
+        }
+    }
+
+    /**
+     * get routes by selected date
+     * @param int $date unix timestamp
+     * @return array mixed { [
+     *      points:[
+     *          {
+     *              float latitude,
+     *              float longitude,
+     *              string time_start,
+     *              string time_end,
+     *              string address,
+     *              float time
+     *          }
+     *     float total_time] ] }
+     */
+    public function get_route_by_date($date){
+        $query = "SELECT routes FROM Routes WHERE calculating_date=?s";
+        $date = date('Ymd',$date);
+        $routes = unserialize(base64_decode($this->database->getRow($query,$date)['routes']));
+        if ($routes == false)
+            $routes = array();
+        return $routes;
     }
 
     /**
@@ -157,81 +264,10 @@ class Model_Route extends Model{
                     }
         }
         if (!$canmove){
-           return $answer;
+            return $answer;
         }
         else
             return $best;
-    }
-
-    /**
-     * Checks an existing routes and if it`s not existing
-     * calculate new route and write into database
-     * @param $points array {[int point_id, int time_start , int time_end],[]....}
-     * @param $timeMatrix [[int/null],[int/null].....]
-     * @param $date int unix timestamp
-     * @throws Model_Except
-     * @return mixed
-     */
-    public function handling_route($points,$timeMatrix,$date){
-        // Check on existing routes
-        // If there is no routes then calculate new route
-        if (!$this->checks_existence_route($date)) {
-
-           $model_points = new Model_Delivery_Points();
-            //check exciting points in Database
-            foreach ($points as $value)
-                if (!$model_points->isset_point($value['point_id']))
-                    throw new Model_Except("Одной из выбранных точек не существует в БД");
-            // Get paths by algorithm
-            $ways = $this->calculate_route($points, $timeMatrix);
-            $tracks = array();
-
-            // get info about delivery point && path
-            foreach ($ways as $way) {
-                foreach ($way['path'] as $dot) {
-                    $point_info = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
-                    $point['latitude'] = $point_info['point_info']['latitude'];
-                    $point['longitude'] = $point_info['point_info']['longitude'];
-                    //$point['time_start'] = $point_info['point_info']['time_start'];
-                    //$point['time_end'] = $point_info['point_info']['time_end'];
-                    $point['address'] = $point_info['point_info']['street'] . ' ' . $point_info['point_info']['house'];
-                    $point['time'] = $dot['time'];
-                    $route['points'][] = $point;
-                }
-                $route['total_time']=$way['total_time'];
-                $tracks[] = $route;
-                $route = array();
-            }
-            //delete useless variables
-            unset($ways,$route,$point,$point_info,$value,$way,$dot);
-
-            // save calculated routes into database
-            //$this->save_route($tracks, $date);
-        }
-    }
-
-    /**
-     * get routes by selected date
-     * @param int $date unix timestamp
-     * @return array mixed { [
-     *      points:[
-     *          {
-     *              float latitude,
-     *              float longitude,
-     *              string time_start,
-     *              string time_end,
-     *              string address,
-     *              float time
-     *          }
-     *     float total_time] ] }
-     */
-    public function get_route_by_date($date){
-        $query = "SELECT routes FROM Routes WHERE calculating_date=?s";
-        $date = date('Ymd',$date);
-        $routes = unserialize(base64_decode($this->database->getRow($query,$date)['routes']));
-        if ($routes == false)
-            $routes = array();
-        return $routes;
     }
 
     /**
