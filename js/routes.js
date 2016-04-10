@@ -1,5 +1,9 @@
 var Routes = [];
 var myMap;
+
+/** Загружает карту, по загрузке выполняет функцию DoOnLoad
+*
+*/
 ymaps.ready(function () {
     myMap = new ymaps.Map("map", {
         center: [53.9022528, 27.561639],
@@ -8,6 +12,10 @@ ymaps.ready(function () {
     });
     DoOnLoad();
 });
+
+/** Подготавливает страницу для пользователя: устанавливает дату, заружает маршруты
+*
+*/
 function DoOnLoad()
 {
 	try {
@@ -40,6 +48,10 @@ function DoOnLoad()
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
+
+/** Реализует маршруты, как объекты класса
+* @class
+*/
 function Route()
 {
 	this.paths = [];
@@ -51,6 +63,9 @@ function Route()
 	this.totalTime = null;
 }
 Route.prototype = {
+	/** Сворачивает/разворачивает блок маршрута. Если блок свернут, то разворачивает и вызывает showOnMap
+	*
+	*/
 	toggle: function () {
 		try {
 			if (this.isAdded) {
@@ -70,6 +85,10 @@ Route.prototype = {
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
+
+	/** Удаляет все другие маршруты с карты и отображает выбранный
+	*
+	*/
 	showOnMap: function () {
 		try {
 			myMap.geoObjects.removeAll();
@@ -77,6 +96,10 @@ Route.prototype = {
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
+	
+	/** Создает блок маршрута
+	*
+	*/
 	create: function () {
 		try {
 			if (!this.isAdded) {
@@ -130,6 +153,10 @@ Route.prototype = {
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
+	
+	/** Выбирает текущий маршрут: вызывает toggle для открытого маршрутов, затем toggle для текущего
+	*
+	*/
 	select: function () {
 		try {
 			if (!this.isOpen)
@@ -140,6 +167,10 @@ Route.prototype = {
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
+	
+	/** Удаляет блок маршрута
+	*
+	*/
 	delete: function () {
 		try {
 			var _this = this;
@@ -163,6 +194,9 @@ Route.prototype = {
 	}
 }
 
+/** Загружает маршруты на дату
+*
+*/
 function loadOnDate()
 {
 	try{

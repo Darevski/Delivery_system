@@ -1,5 +1,9 @@
 var Points = [];
 var myMap;
+
+/** Загружает карту, по загрузке выполняет функцию DoOnLoad
+*
+*/
 ymaps.ready(function () {
     myMap = new ymaps.Map("map", {
         center: [53.9022528, 27.561639],
@@ -8,6 +12,10 @@ ymaps.ready(function () {
     });
     DoOnLoad();
 });
+
+/** Подготавливает страницу для пользователя: устанавливает ссылки, дату; загружает точки
+*
+*/
 function DoOnLoad()
 {
 	try {
@@ -45,6 +53,9 @@ function DoOnLoad()
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
 
+/** Реализует точки, как объекты класса
+* @class
+*/
 function Point()
 {
 	try {
@@ -78,6 +89,9 @@ function Point()
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
 Point.prototype = {
+	/** Сворачивает/разворачивает блок точки
+	*
+	*/
 	toggle: function () {
 		try {
 			this.Object.style.height = (this.isOpen) ? "" : "232px";
@@ -86,6 +100,10 @@ Point.prototype = {
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
+	
+	/** Создает и добавляет блок точки, ее метку на карте
+	*
+	*/
 	create: function () {
 		try {
 			if (this.isAdded)
@@ -246,6 +264,10 @@ Point.prototype = {
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
+	
+	/** Открывает диалог редактирования информации точки
+	*
+	*/
     editDialog: function () {
         try {
 			var _this = this;
@@ -378,6 +400,10 @@ Point.prototype = {
         }
         catch (ex) { console.error(ex); new Dialog(ex.message); }
     },
+	
+	/** Сохраняет информацию точки на сервер
+	*
+	*/
 	save: function () {
 		try {
             var _this = this;
@@ -484,6 +510,10 @@ Point.prototype = {
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
+	
+	/** Удаляет точку как локально, так и с сервера
+	*
+	*/
     delete: function () {
         try {
 			function PointDelete(_this) {
@@ -527,6 +557,10 @@ Point.prototype = {
         }
         catch (ex) { console.error(ex); new Dialog(ex.message); }
     },
+	
+	/** Загружает информацию о точке с сервера
+	*
+	*/
 	load: function () {
 		try {
 			var body = {};
@@ -581,6 +615,10 @@ Point.prototype = {
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
+	
+	/** Заполняет блок точки информацией, перемещает метку на карте
+	*
+	*/
 	fill: function () {
 		try {
 			var block = this.Object.getElementsByClassName("order-title")[0];
@@ -615,6 +653,10 @@ Point.prototype = {
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	},
+	
+	/** Удаляет блок точки и метку на карте
+	*
+	*/
 	deleteLocal: function () {
 		try {
 			if (this.isAdded) {
@@ -643,6 +685,9 @@ Point.prototype = {
 	}
 }
 
+/** Создает запрос на резервирование точки, создает ее локально и вызывает ее метод editDialog
+*
+*/
 function PreparePoint()
 {
 	try {
@@ -673,6 +718,9 @@ function PreparePoint()
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
 
+/** Загружает точки на дату, указанную в datepicker
+*
+*/
 function loadPoints()
 {
 	try {
@@ -705,6 +753,9 @@ function loadPoints()
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
 
+/** Рассчитывает блок Итого: расчет количества точек и общей стоимости
+*
+*/
 function reCalc()
 {
 	try {
@@ -721,8 +772,12 @@ function reCalc()
 		((totalcount == 0) || (totalcount > 4)) && (document.querySelector("#right-footer > p:nth-child(1)").innerHTML += " точек");
 		document.querySelector("#right-footer > p:nth-child(2)").innerHTML = "общей суммой " + totalcost.toFixed(3);
 	}
-	_this.Object.style.margin = "-20px 0 0 -600px"
+	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
+
+/** Выполняет проверку маршрутизации. Если обнаруживает рассчитанный маршрут, сообщает об этом; в противном случае строит матрицу времени [0..n], содержащую время в пути из точки a в точку b, либо null, в случае отсутствия пути, а так же массив краткой информации о точках
+*
+*/
 function calcRoutes() {
 	try {
 		if (getVar("pending") == false) {
