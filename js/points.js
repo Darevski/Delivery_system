@@ -19,10 +19,11 @@ ymaps.ready(function () {
 function DoOnLoad()
 {
 	try {
+		document.body.style.opacity = "1";
 		/* Меню */
 		var top_tabs = document.getElementById("tab-bar").children;
-		top_tabs[0].onclick = function () { window.location.href = "/"; }
-		top_tabs[1].onclick = function () { window.location.href = "/Route"; }
+		top_tabs[0].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/"; }, 600); }
+		top_tabs[1].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/Route"; }, 600); }
 		reCalc();
 		document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
 		document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
@@ -78,7 +79,7 @@ function Point()
 		this.Object = null;
 		this.id = null;
 		this.isAdded = false;
-		this.map_id = (Points.length == 0) ? 1 : (Points[Points.length-1].map_id + 1);
+		this.map_id = Points.length + 1;
 		this.uniq = null;
 		this.coordinates = {
 			longitude: null,
@@ -270,135 +271,139 @@ Point.prototype = {
 	*/
     editDialog: function () {
         try {
-			var _this = this;
-			var _temp = document.createElement("div");
-			_temp.setAttribute("id", "edit-order");
-			_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" min="17:00" max="22:00" step="900" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to" min="17:00" max="22:00" step="900"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
-			_temp.getElementsByTagName("p")[0].innerHTML = this.uniq;
-			(this.address.street) && (_temp.getElementsByTagName("input")[0].value = this.address.street);
-			(this.address.house)  && (_temp.getElementsByTagName("input")[1].value = this.address.house);
-			(this.address.entry)  && (_temp.getElementsByTagName("input")[2].value = this.address.entry);
-			(this.address.floor)  && (_temp.getElementsByTagName("input")[3].value = this.address.floor);
-			(this.address.flat)   && (_temp.getElementsByTagName("input")[4].value = this.address.flat);
-			
-			(this.time.start) && (_temp.getElementsByClassName("time-from")[0].value = this.time.start);
-			(this.time.end)   && (_temp.getElementsByClassName("time-to")[0].value = this.time.end);
-			
-			(this.phone) && (_temp.getElementsByTagName("input")[7].value = this.phone);
-			
-			for (var i = 0; i < this.items.length; i++)
-				{
-					var el = document.createElement("div");
-					el.setAttribute("class", "item");
-					el.setAttribute("data-pid", this.items[i].order_id);
-					el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
-					el.children[0].value = this.items[i].description;
-					el.children[1].value = this.items[i].cost;
-					var item = this.items[i];
-					el.children[2].onclick = function () {
-						try {
-							var body = { order_id: item.order_id }
-							var req = new Request("/Orders/delete_order", body);
-							var __this = this;
-							var _onclick = this.onclick;
-							this.onclick = void(0);
-							req.callback = function (Response) {
-								try {
+			if (!getVar("pending")) {
+				setVar("pending", true);
+				var _this = this;
+				var _temp = document.createElement("div");
+				_temp.setAttribute("id", "edit-order");
+				_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" min="17:00" max="22:00" step="900" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to" min="17:00" max="22:00" step="900"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
+				_temp.getElementsByTagName("p")[0].innerHTML = this.uniq;
+				(this.address.street) && (_temp.getElementsByTagName("input")[0].value = this.address.street);
+				(this.address.house)  && (_temp.getElementsByTagName("input")[1].value = this.address.house);
+				(this.address.entry)  && (_temp.getElementsByTagName("input")[2].value = this.address.entry);
+				(this.address.floor)  && (_temp.getElementsByTagName("input")[3].value = this.address.floor);
+				(this.address.flat)   && (_temp.getElementsByTagName("input")[4].value = this.address.flat);
+
+				(this.time.start) && (_temp.getElementsByClassName("time-from")[0].value = this.time.start);
+				(this.time.end)   && (_temp.getElementsByClassName("time-to")[0].value = this.time.end);
+
+				(this.phone) && (_temp.getElementsByTagName("input")[7].value = this.phone);
+
+				for (var i = 0; i < this.items.length; i++)
+					{
+						var el = document.createElement("div");
+						el.setAttribute("class", "item");
+						el.setAttribute("data-pid", this.items[i].order_id);
+						el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
+						el.children[0].value = this.items[i].description;
+						el.children[1].value = this.items[i].cost;
+						var item = this.items[i];
+						el.children[2].onclick = function () {
+							try {
+								var body = { order_id: item.order_id }
+								var req = new Request("/Orders/delete_order", body);
+								var __this = this;
+								var _onclick = this.onclick;
+								this.onclick = void(0);
+								req.callback = function (Response) {
+									try {
+										var answer = JSON.parse(Response);
+										if (answer.data.state == "success") {
+											__this.parentNode.remove();
+											_this.items.splice(_this.items.indexOf(item),1);
+										}
+										else {
+											new Dialog(answer.data.message);
+											__this.onclick = _onclick;
+										}
+									}
+									catch (ex) { console.error(ex); new Dialog(ex.message); }
+								}
+								req.do();
+							}
+							catch (ex) { console.error(ex); new Dialog(ex.message); }
+						}
+						_temp.getElementsByTagName("div")[3].appendChild(el);
+					}
+				_temp.getElementsByClassName("add-floating-button")[0].onclick = function () {
+					try {
+						var body = {
+							point_id: _this.id,
+							description: "",
+							cost: 0
+						}
+						var __this = this;
+						var req = new Request("/Orders/add_order", body);
+						req.callback = function (Response) {
+							try {
 									var answer = JSON.parse(Response);
 									if (answer.data.state == "success") {
-										__this.parentNode.remove();
-										_this.items.splice(_this.items.indexOf(item),1);
-									}
-									else {
-										new Dialog(answer.data.message);
-										__this.onclick = _onclick;
-									}
-								}
-								catch (ex) { console.error(ex); new Dialog(ex.message); }
-							}
-							req.do();
-						}
-						catch (ex) { console.error(ex); new Dialog(ex.message); }
-					}
-					_temp.getElementsByTagName("div")[3].appendChild(el);
-				}
-			_temp.getElementsByClassName("add-floating-button")[0].onclick = function () {
-				try {
-					var body = {
-						point_id: _this.id,
-						description: "",
-						cost: 0
-					}
-					var __this = this;
-					var req = new Request("/Orders/add_order", body);
-					req.callback = function (Response) {
-						try {
-								var answer = JSON.parse(Response);
-								if (answer.data.state == "success") {
-									var item = {/* TODO считать из ответа сервера */
-										order_id: answer.data.order_id,
-										description: "",
-										cost: 0
-									}
-									_this.items.push(item);
-									var el = document.createElement("div");
-									el.setAttribute("class", "item");
-									el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
-									el.children[2].onclick = function () {
-									var body = { order_id: item.order_id }
-										var req = new Request("/Orders/delete_order", body);
-										var __this = this;
-										var _onclick = this.onclick;
-										this.onclick = void(0);
-										req.callback = function (Response) {
-											try {
-												var answer = JSON.parse(Response);
-												if (answer.data.state == "success") {
-													__this.parentNode.remove();
-													_this.items.splice(_this.items.indexOf(item),1);
-												}
-												else {
-													new Dialog(answer.data.message);
-													__this.onclick = _onclick;
-												}
-											}
-											catch (ex) { console.error(ex); new Dialog(ex.message); }
+										var item = {/* TODO считать из ответа сервера */
+											order_id: answer.data.order_id,
+											description: "",
+											cost: 0
 										}
-										req.do();
+										_this.items.push(item);
+										var el = document.createElement("div");
+										el.setAttribute("class", "item");
+										el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
+										el.children[2].onclick = function () {
+										var body = { order_id: item.order_id }
+											var req = new Request("/Orders/delete_order", body);
+											var __this = this;
+											var _onclick = this.onclick;
+											this.onclick = void(0);
+											req.callback = function (Response) {
+												try {
+													var answer = JSON.parse(Response);
+													if (answer.data.state == "success") {
+														__this.parentNode.remove();
+														_this.items.splice(_this.items.indexOf(item),1);
+													}
+													else {
+														new Dialog(answer.data.message);
+														__this.onclick = _onclick;
+													}
+												}
+												catch (ex) { console.error(ex); new Dialog(ex.message); }
+											}
+											req.do();
+										}
+										document.getElementById("edit-order-items").appendChild(el);
 									}
-									document.getElementById("edit-order-items").appendChild(el);
+									else
+										new Dialog(answer.data.message);
 								}
-								else
-									new Dialog(answer.data.message);
-							}
-						catch (ex) { console.error(ex); new Dialog(ex.message); }
-					}
-					req.do();
-				}
-				catch (ex) { console.error(ex); new Dialog(ex.message); }
-			}
-			_temp.getElementsByClassName("button-cancel")[0].onclick = function () {
-				try {
-					if (_this.isAdded)
-						{
-							_this.load();
-							this.parentNode.parentNode.style.opacity = "0";
-							var _t = this;
-							setTimeout(function () { _t.parentNode.parentNode.remove(); }, 550);
+							catch (ex) { console.error(ex); new Dialog(ex.message); }
 						}
-					else
-						_this.delete();
+						req.do();
+					}
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
 				}
-				catch (ex) { console.error(ex); new Dialog(ex.message); }
-            }
-			_temp.getElementsByClassName("button-save")[0].onclick = function () { _this.save(); }
-			_temp.style.opacity = "0";
-			document.body.appendChild(_temp);
-            document.querySelector("#edit-order-time > input.time-from").value = "17:00";
-            document.querySelector("#edit-order-time > input.time-to").value = "22:00";
-			setTimeout(function () { _temp.style.opacity = ""; }, 10);
-        }
-        catch (ex) { console.error(ex); new Dialog(ex.message); }
+				_temp.getElementsByClassName("button-cancel")[0].onclick = function () {
+					try {
+						if (_this.isAdded)
+							{
+								_this.load();
+								this.parentNode.parentNode.style.opacity = "0";
+								var _t = this;
+								setTimeout(function () { _t.parentNode.parentNode.remove(); }, 550);
+							}
+						else
+							_this.delete();
+					}
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
+				}
+				_temp.getElementsByClassName("button-save")[0].onclick = function () { _this.save(); }
+				_temp.style.opacity = "0";
+				document.body.appendChild(_temp);
+				delVar("pending");
+				document.querySelector("#edit-order-time > input.time-from").value = "17:00";
+				document.querySelector("#edit-order-time > input.time-to").value = "22:00";
+				setTimeout(function () { _temp.style.opacity = ""; }, 10);
+			}
+		}
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
     },
 	
 	/** Сохраняет информацию точки на сервер
@@ -408,6 +413,7 @@ Point.prototype = {
 		try {
             var _this = this;
             if (!getVar("pending")) {
+				setVar("pending", true);
                 var loader = new PreLoader(document.getElementById("edit-order-window"));
                 loader.inprogress = function () {
                     try {
@@ -516,44 +522,48 @@ Point.prototype = {
 	*/
     delete: function () {
         try {
-			function PointDelete(_this) {
-				try {
-					var t = {};
-					t.point_id = _this.id;
-					var req = new Request("/Points/delete_point", t);
-					req.callback = function (Response) {
-						try {
-							var answer = JSON.parse(Response);
-							if (answer.data.state == "success")
-								{
-									var block = document.getElementById("edit-order");
-									if (block) {
-										block.style.opacity = "0";
-										setTimeout(function () { block.remove(); }, 550);
+			if (!getVar("pending")) {
+				function PointDelete(_this) {
+					try {
+						var t = {};
+						t.point_id = _this.id;
+						var req = new Request("/Points/delete_point", t);
+						req.callback = function (Response) {
+							try {
+								var answer = JSON.parse(Response);
+								if (answer.data.state == "success")
+									{
+										delVar("pending");
+										var block = document.getElementById("edit-order");
+										if (block) {
+											block.style.opacity = "0";
+											setTimeout(function () { block.remove(); }, 550);
+										}
+										if (_this.isAdded) {
+											_this.deleteLocal();
+										}
+										else {
+											Points.splice(_this.point_id,1);
+										}
 									}
-									if (_this.isAdded) {
-										_this.deleteLocal();
-									}
-									else {
-										Points.splice(_this.point_id,1);
-									}
-								}
-							else
-								new Dialog(answer.data.message);
+								else
+									new Dialog(answer.data.message);
+							}
+							catch (ex) { console.error(ex); new Dialog(ex.message); }
 						}
-						catch (ex) { console.error(ex); new Dialog(ex.message); }
+						req.do();
 					}
-					req.do();
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
 				}
-				catch (ex) { console.error(ex); new Dialog(ex.message); }
+				setVar("pending", true);
+				var _this = this;
+				if (this.isOpen) {
+					this.toggle();
+					setTimeout(PointDelete, 500, _this);
+				}
+				else
+					PointDelete(_this);
 			}
-			var _this = this;
-			if (this.isOpen) {
-				this.toggle();
-				setTimeout(PointDelete, 500, _this);
-			}
-			else
-				PointDelete(_this);
         }
         catch (ex) { console.error(ex); new Dialog(ex.message); }
     },
@@ -691,13 +701,14 @@ Point.prototype = {
 function PreparePoint()
 {
 	try {
-		if (getVar("pending") == false)
+		if (!getVar("pending"))
 			{
 				setVar("pending", true);
 				var query = new Request("/Points/add_empty_point");
 				query.callback = function (Response) {
 					try {
 						var ans = JSON.parse(Response);
+						delVar("pending");
 						if (ans.data.state == "success")
 							{
 								var t = new Point();
@@ -705,7 +716,6 @@ function PreparePoint()
 								t.id = ans.data.point_id;
 								t.uniq = ans.data.identifier_order;
 								t.editDialog();
-								delVar("pending");
 							}
 						else
 							new Dialog(ans.data.message);
@@ -724,31 +734,40 @@ function PreparePoint()
 function loadPoints()
 {
 	try {
-		for (var i = 0; i < Points.length; i++)
-			Points[i].deleteLocal();
-		var day = new Date(document.querySelector('#store-date > input[type="date"]').value);
-		var body = { delivery_date: day.getTime() / 1000 }
-		var req = new Request("Points/get_points_by_date", body);
-		req.callback = function (Response) {
-			try {
-				var answer = JSON.parse(Response);
-				if (answer.data.state == "success")
-					{
-						if (answer.data.points_id)
-							for (var i = 0; i < answer.data.points_id.length; i++)
-								{
-									var t = new Point();
-									t.id = answer.data.points_id[i];
-									t.load();
-									Points.push(t);
-								}
-					}
-				else
-					new Dialog(answer.data.message);
+		if (!getVar("pending")) {
+			var delay = 10;
+			for (var i = 0; i < Points.length; i++) {
+				Points[i].deleteLocal();
+				delay = 1000;
 			}
-			catch (ex) { console.error(ex); new Dialog(ex.message); }
+			setTimeout(function () {
+				setVar("pending", true);
+				var day = new Date(document.querySelector('#store-date > input[type="date"]').value);
+				var body = { delivery_date: day.getTime() / 1000 }
+				var req = new Request("Points/get_points_by_date", body);
+				req.callback = function (Response) {
+					try {
+						var answer = JSON.parse(Response);
+						if (answer.data.state == "success")
+							{
+								delVar("pending");
+								if (answer.data.points_id)
+									for (var i = 0; i < answer.data.points_id.length; i++)
+										{
+											var t = new Point();
+											t.id = answer.data.points_id[i];
+											t.load();
+											Points.push(t);
+										}
+							}
+						else
+							new Dialog(answer.data.message);
+					}
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
+				}
+				req.do();
+			}, delay);
 		}
-		req.do();
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }

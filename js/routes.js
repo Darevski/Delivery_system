@@ -19,10 +19,11 @@ ymaps.ready(function () {
 function DoOnLoad()
 {
 	try {
+		document.body.style.opacity = "1";
 		/* Меню */
 		var top_tabs = document.getElementById("tab-bar").children;
-		top_tabs[0].onclick = function () { window.location.href = "/"; }
-		top_tabs[1].onclick = function () { window.location.href = "/Route"; }
+		top_tabs[0].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/"; }, 600); }
+		top_tabs[1].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/Route"; }, 600); }
 		document.querySelector('#store-date > input[type="date"]').onchange = loadOnDate;
 		var req = new Request("/API/get_time");
 		req.callback = function (Response) {
@@ -202,8 +203,11 @@ function loadOnDate()
 	try{
 		var mainlat = 53.9383;
 		var mainlon = 27.5783;
-		for (var i = 0; i<Routes.length; i++)
+		var delay = 10;
+		for (var i = 0; i<Routes.length; i++) {
 			Routes[i].delete();
+			delay = 1000;
+		}
 		setTimeout(function (){
 			var temp = new Date(document.querySelector('#store-date > input[type="date"]').value);
 			var body = {
@@ -244,7 +248,7 @@ function loadOnDate()
 				catch (ex) { console.error(ex); new Dialog(ex.message); }
 			}
 			req.do();
-		}, 10);
+		}, delay);
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
