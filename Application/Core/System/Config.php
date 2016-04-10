@@ -31,6 +31,11 @@ class Config {
     }
 
     /**
+     * @var array route Algorithm delay time
+     */
+    private $route_algoritm;
+
+    /**
      * @var array database connect configuration
      */
     private $database_config = null;
@@ -54,6 +59,7 @@ class Config {
         $this->database_config = $Config['Data_Base_config'];
         $this->build = $Config['Build'];
         $this->yandex_unit  = $Config['Yandex Unit'];
+        $this->route_algoritm = $Config['Route Algorithm'];
     }
 
     /** cap for protection */
@@ -81,5 +87,13 @@ class Config {
      */
     public function get_yandex_unit(){
         return $this->yandex_unit;
+    }
+
+    /**
+     * return time delay for route algorithm
+     * @return array
+     */
+    public function get_route_algorithm(){
+        return $this->route_algoritm;
     }
 }
