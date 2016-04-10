@@ -28,6 +28,7 @@ function DoOnLoad()
 				date_input += _t.getDate();
 				document.querySelector('#store-date > input[type="date"]').value = date_input;
 				delVar("pending");
+				loadOnDate();
 			}
 			else
 				new Dialog("Ошибка ответа сервера");
@@ -149,8 +150,9 @@ function loadOnDate()
 		for (var i = 0; i<Routes.length; i++)
 			Routes[i].delete();
 		setTimeout(function (){
+			var temp = new Date(document.querySelector('#store-date > input[type="date"]').value);
 			var body = {
-				date: new Date(document.querySelector('#store-date > input[type="date"]').value)
+				date: temp.getTime() / 1000
 			}
 			var req = new Request("/Route/get_routes", body);
 			req.callback = function (Response) {
