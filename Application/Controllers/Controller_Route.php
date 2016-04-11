@@ -142,9 +142,9 @@ class Controller_Route extends Controller
             throw new UFO_Except("Incorrect date in Json",400);
 
         $routes = $this->Model_Route->get_route_by_date($valid_arr['date']);
-        $result['routes'] = $routes;
-        $result['state'] = 'success';
-        View::output_json($result);
+        $output['routes'] = $routes;
+        $output['state'] = 'success';
+        View::output_json($output);
     }
 
     /**

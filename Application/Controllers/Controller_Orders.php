@@ -71,8 +71,11 @@ class Controller_Orders extends Controller{
 
         $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
 
-        $result =$this->Model_orders->add_order($valid_arr['point_id'],$valid_arr['description'],$valid_arr['cost']);
-        View::output_json($result);
+        $order_id =$this->Model_orders->add_order($valid_arr['point_id'],$valid_arr['description'],$valid_arr['cost']);
+
+        $output['order_id'] = $order_id;
+        $output['state']='success';
+        View::output_json($output);
     }
 
     /**
@@ -95,8 +98,8 @@ class Controller_Orders extends Controller{
         if (is_null($order_id))
             throw new UFO_Except("incorrect Json value 'order_id' ",400);
         // if all checks are successful we are call model method
-        $result =$this->Model_orders->delete_order($order_id);
-        View::output_json($result);
+        $this->Model_orders->delete_order($order_id);
+        View::output_json(array('state'=>'success'));
 
     }
 
@@ -129,8 +132,8 @@ class Controller_Orders extends Controller{
         $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
 
         // if all checks are successful we are call model method
-        $result =$this->Model_orders->update_order($valid_arr['order_id'],$valid_arr['description'],$valid_arr['cost']);
-        View::output_json($result);
+        $this->Model_orders->update_order($valid_arr['order_id'],$valid_arr['description'],$valid_arr['cost']);
+        View::output_json(array('state'=>'success'));
     }
 
     /**
@@ -155,7 +158,9 @@ class Controller_Orders extends Controller{
         if (is_null($point_id))
             throw new UFO_Except("incorrect Json value 'point_id' ",400);
         // if all checks are successful we are call model method
-        $result =$this->Model_orders->get_list_orders_by_point_id($point_id);
-        View::output_json($result);
+        $orders =$this->Model_orders->get_list_orders_by_point_id($point_id);
+        $output['orders'] = $orders;
+        $output['state'] = 'success';
+        View::output_json($output);
     }
 }

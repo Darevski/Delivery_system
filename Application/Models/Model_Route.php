@@ -107,13 +107,10 @@ class Model_Route extends Model{
             // get info about delivery point && path
             foreach ($ways as $way) {
                 foreach ($way['path'] as $dot) {
-                    $point_info = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
+                    $point = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
                     $point['point_id'] = $points[$dot['index_point']]['point_id'];
-                    $point['latitude'] = $point_info['point_info']['latitude'];
-                    $point['longitude'] = $point_info['point_info']['longitude'];
-                    //$point['time_start'] = $point_info['point_info']['time_start'];
-                    //$point['time_end'] = $point_info['point_info']['time_end'];
-                    $point['address'] = $point_info['point_info']['street'] . ' ' . $point_info['point_info']['house'];
+
+                    $point['address'] = $point['street'] . ' ' . $point['house'];
                     $point['time'] = $dot['time'];
                     $route['points'][] = $point;
                 }
