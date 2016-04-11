@@ -12,7 +12,7 @@ body
 	opacity: 0;
 	transition: 0.5s;
 }
-input, select { outline: none; 	display: inline-block; vertical-align: top; }
+input, select { outline: none; 	display: inline-block; vertical-align: top; cursor: pointer; }
 input:focus, select:focus { outline: none; }
 input[type="date"]:focus
 {
@@ -53,10 +53,12 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	line-height: 40px;
 	text-align: center;
 	border-bottom: 2px solid @color-delimeter;
+    cursor: pointer;
 }
 #tab-bar p:last-child
 {
 	width: ~"calc(100% - 200px)";
+    cursor: default;
 }
 #tab-bar
 {
@@ -70,6 +72,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 {
 	opacity: 1;
 	transition: 0.5s;
+    cursor: pointer;
 }
 .button-more, .button-delete, .button-edit, .button-reset, .button-save, .button-cancel
 {
@@ -128,6 +131,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	box-shadow: 0 2px 20px -3px #000;
 	background-color: @color-main;
 	transition: 0.5s;
+    cursor: pointer;
 }
 .add-floating-button
 {
@@ -183,6 +187,7 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 .ex-button:hover
 {
 	color: @color-main;
+    cursor: pointer;
 }
 .ex-button
 {
