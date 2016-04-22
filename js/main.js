@@ -96,6 +96,7 @@ Request.prototype = {
 */
 function Dialog(message, options)
 {
+	(loader != void(0)) && (loader.purge());
 	this.options = (options != undefined) ? options.reverse() : [];
 	this.message = (message) ? message : "Что-то пошло не так";
 	this.create();

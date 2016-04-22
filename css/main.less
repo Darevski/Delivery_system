@@ -18,21 +18,15 @@ input[type="date"]:focus
 {
 	outline: 0;
 }
-input[type="date"]::-webkit-calendar-picker-indicator:hover
-{
-	color: @color-main;
-	transition: 0.5s;
-	background-color: #FFF;
-}
 input[type="date"]::-webkit-calendar-picker-indicator
 {
     font-size: 16px;
-	display: block;
-	transition: 0.5s;
-	background-color: none;	
+	transition: 0.2s;
+	background-color: @color-block;	
+	color: #897579;
 }
 input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin-button {
-    display: none;
+	display: none;
 }
 *
 {

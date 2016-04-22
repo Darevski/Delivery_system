@@ -1,6 +1,6 @@
 var Points = [];
 var myMap;
-
+var loader;
 /** Загружает карту, по загрузке выполняет функцию DoOnLoad
 *
 */
@@ -414,7 +414,7 @@ Point.prototype = {
             var _this = this;
             if (!getVar("pending")) {
 				setVar("pending", true);
-                var loader = new PreLoader(document.getElementById("edit-order-window"));
+                loader = new PreLoader(document.getElementById("edit-order-window"));
                 loader.inprogress = function () {
                     try {
                         var body = {};
@@ -494,22 +494,22 @@ Point.prototype = {
                                                         if (counter == 0)
                                                             ok_end();
                                                     }
-                                                    else { loader.purge(); new Dialog(answer.data.message); }
+                                                    else { new Dialog(answer.data.message); }
                                                 }
                                                 catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
                                             }
                                             req1.do();
                                         }
                                     }
-                                else { loader.purge(); new Dialog(answer.data.message); }
+                                else { new Dialog(answer.data.message); }
                             }
                             catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
                         }
                         if (_send)
 							req.do();
-						else { new Dialog(errmsg); loader.purge();}
+						else { new Dialog(errmsg); }
                     }
-                    catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
+                    catch (ex) { console.error(ex); new Dialog(ex.message); }
                 }
                 loader.create();
             }
@@ -734,7 +734,9 @@ function PreparePoint()
 function loadPoints()
 {
 	try {
+		var dateBlock = document.querySelector('#store-date > input[type="date"]');
 		if (!getVar("pending")) {
+			dateBlock.setAttribute("disabled", "1");
 			var delay = 10;
 			for (var i = 0; i < Points.length; i++) {
 				Points[i].deleteLocal();
@@ -742,7 +744,7 @@ function loadPoints()
 			}
 			setTimeout(function () {
 				setVar("pending", true);
-				var day = new Date(document.querySelector('#store-date > input[type="date"]').value);
+				var day = new Date(dateBlock.value);
 				var body = { delivery_date: day.getTime() / 1000 }
 				var req = new Request("Points/get_points_by_date", body);
 				req.callback = function (Response) {
@@ -759,17 +761,17 @@ function loadPoints()
 											t.load();
 											Points.push(t);
 										}
+								dateBlock.removeAttribute("disabled");
 							}
-						else
-							new Dialog(answer.data.message);
+						else {	new Dialog(answer.data.message); dateBlock.removeAttribute("disabled"); }
 					}
-					catch (ex) { console.error(ex); new Dialog(ex.message); }
+					catch (ex) { console.error(ex); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
 				}
 				req.do();
 			}, delay);
 		}
 	}
-	catch (ex) { console.error(ex); new Dialog(ex.message); }
+	catch (ex) { console.error(ex); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
 }
 
 /** Рассчитывает блок Итого: расчет количества точек и общей стоимости
@@ -805,7 +807,7 @@ function calcRoutes() {
 			var body = {
 				date: date.getTime() / 1000
 			}
-			var loader = new PreLoader();
+			loader = new PreLoader();
 			loader.inprogress = function () {
 				try {
 				var req = new Request("/Route/get_routes", body);
@@ -866,16 +868,15 @@ function calcRoutes() {
 																								loader.purge();
 																								delVar("pending");
 																							}
-																						else { new Dialog(answer.data.message); loader.purge(); }
+																						else { new Dialog(answer.data.message); }
 																					}
-																					catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
+																					catch (ex) { console.error(ex); new Dialog(ex.message); }
 																				}
 																				reqCalc.do();
 																			}
 																		},
 																		function (error) {
 																			new Dialog('Возникла ошибка: ' + error.message);
-																			loader.purge();
 																		}
 																	);
 																});
@@ -883,22 +884,21 @@ function calcRoutes() {
 														},
 														function (error) {
 															new Dialog('Возникла ошибка: ' + error.message);
-															loader.purge();
 														}
 													);
 
 											});
 										});
 									}
-								else { delVar("pending"); new Dialog("На данную дату маршрут уже существует", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", body.date); window.location.href = "/Route"; }}]); loader.purge(); }
+								else { delVar("pending"); new Dialog("На данную дату маршрут уже существует", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", body.date); window.location.href = "/Route"; }}]); }
 							}
-						else {	new Dialog(answer.data.message); loader.purge(); }
+						else {	new Dialog(answer.data.message); }
 					}
-					catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
 				}
 				req.do();
 				}
-				catch (ex) { console.error(ex); new Dialog(ex.message); loader.purge(); }
+				catch (ex) { console.error(ex); new Dialog(ex.message); }
 			}
 			loader.create();
 		}
