@@ -18,6 +18,21 @@ ymaps.ready(function () {
 */
 function DoOnLoad()
 {
+	function setDateNload(dateToSet) {
+		try {
+			var _t = new Date(dateToSet * 1000);
+			var date_input = _t.getFullYear() + "-";
+			(_t.getMonth() < 10) && (date_input += "0");
+			date_input += (_t.getMonth() + 1) + "-";
+			(_t.getDate() < 10) && (date_input += "0");
+			date_input += _t.getDate();
+			document.querySelector('#store-date > input[type="date"]').value = date_input;
+			delVar("pending");
+			delVar("onDate");
+			loadOnDate();
+		}
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
+	}
 	try {
 		document.body.style.opacity = "1";
 		/* Меню */
@@ -25,27 +40,23 @@ function DoOnLoad()
 		top_tabs[0].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/"; }, 600); }
 		top_tabs[1].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/Route"; }, 600); }
 		document.querySelector('#store-date > input[type="date"]').onchange = loadOnDate;
-		var req = new Request("/API/get_time");
-		req.callback = function (Response) {
-			try {
-				var answer = JSON.parse(Response);
-				if (answer.data) {
-					var _t = new Date(answer.data * 1000);
-					var date_input = _t.getFullYear() + "-";
-					(_t.getMonth() < 10) && (date_input += "0");
-					date_input += (_t.getMonth() + 1) + "-";
-					(_t.getDate() < 10) && (date_input += "0");
-					date_input += _t.getDate();
-					document.querySelector('#store-date > input[type="date"]').value = date_input;
-					delVar("pending");
-					loadOnDate();
+		if (getVar("onDate"))
+			setDateNload(getVar("onDate"));
+		else {
+			var req = new Request("/API/get_time");
+			req.callback = function (Response) {
+				try {
+					var answer = JSON.parse(Response);
+					if (answer.data) {
+						setDateNload(answer.data);
+					}
+					else
+						new Dialog("Ошибка ответа сервера");
 				}
-				else
-					new Dialog("Ошибка ответа сервера");
+				catch (ex) { console.error(ex); new Dialog(ex.message); }
 			}
-			catch (ex) { console.error(ex); new Dialog(ex.message); }
+			req.do();
 		}
-		req.do();
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }

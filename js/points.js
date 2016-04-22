@@ -276,7 +276,7 @@ Point.prototype = {
 				var _this = this;
 				var _temp = document.createElement("div");
 				_temp.setAttribute("id", "edit-order");
-				_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" min="17:00" max="22:00" step="900" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to" min="17:00" max="22:00" step="900"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
+				_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" min="18:00" max="22:00" step="900" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to" min="18:00" max="22:00" step="900"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
 				_temp.getElementsByTagName("p")[0].innerHTML = this.uniq;
 				(this.address.street) && (_temp.getElementsByTagName("input")[0].value = this.address.street);
 				(this.address.house)  && (_temp.getElementsByTagName("input")[1].value = this.address.house);
@@ -862,7 +862,7 @@ function calcRoutes() {
 																						var answer = JSON.parse(Response);
 																						if (answer.data.state == "success")
 																							{
-																								new Dialog("Маршрут успешно построен", [{text: "Посмотреть маршрут", func: function () { window.location.href = "/Route"; }}]);
+																								new Dialog("Маршрут успешно построен", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", bodyCalc.date); window.location.href = "/Route"; }}]);
 																								loader.purge();
 																								delVar("pending");
 																							}
@@ -890,7 +890,7 @@ function calcRoutes() {
 											});
 										});
 									}
-								else { delVar("pending"); new Dialog("На данную дату маршрут уже существует", [{text: "Посмотреть маршрут", func: function () { window.location.href = "/Route"; }}]); loader.purge(); }
+								else { delVar("pending"); new Dialog("На данную дату маршрут уже существует", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", body.date); window.location.href = "/Route"; }}]); loader.purge(); }
 							}
 						else {	new Dialog(answer.data.message); loader.purge(); }
 					}
