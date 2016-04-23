@@ -235,7 +235,7 @@ function loadOnDate()
 									var temp = new Route();
 									temp.paths = answer.data.routes[i].points;
 									var path = [[mainlat,mainlon]];
-									temp.totalTime = answer.data.routes[i].total_time - 64800;
+									temp.totalTime = answer.data.routes[i].total_time;
 									temp.create();
 									for (var j = 0; j<temp.paths.length; j++)
 										path.push([temp.paths[j].latitude, temp.paths[j].longitude]);
