@@ -11,6 +11,7 @@ namespace Application\Controllers;
 use Application\Core\Controller;
 use Application\Core\View;
 use Application\Exceptions\UFO_Except;
+use Application\Models\Model_Reports;
 use Application\Models\Model_Route;
 use Application\Units\Filter_Unit;
 
@@ -167,10 +168,9 @@ class Controller_Route extends Controller
         if ($this->Filter_unit->date_check($valid_arr['date']) === false)
             throw new UFO_Except("Incorrect date in Json",400);
 
-        $routes = $this->Model_Route->get_route_by_date($valid_arr['date']);
-        $result['routes'] = $routes;
-        $result['state'] = 'success';
-        View::output_json($result);
+        $report_manager = new Model_Reports();
+        $report_manager->get_pdf_routeInfo($valid_arr['date']);
+        //View::output_json($result);
     }
 
     /**
