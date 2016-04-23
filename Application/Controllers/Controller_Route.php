@@ -47,7 +47,7 @@ class Controller_Route extends Controller
      * Calculated routes based on points
      * Structure of Json_input{
      *                      "points":[int point_id, int time_start , int time_end]}
-     *                      "timeMatrix":[[int/null],[int/null].....]
+     *                      "timeMatrix":[[float/null],[float/null].....]
      *                      "date": int unix timestamp
      * @api 'server\Route\calculation'
      * @throws \Application\Exceptions\UFO_Except

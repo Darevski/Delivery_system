@@ -47,6 +47,13 @@ class Model_Route extends Model{
         $this->time_start_delivery = ($hours * 3600 ) + ($min * 60 ) + $sec;
     }
 
+
+    /**
+     * Matrix with time point to point way
+     * @var array float
+     */
+    private $_timeMatrix;
+
     /**
      * Checks an existing routes and if it`s not existing
      * calculate new route and write into database
@@ -57,22 +64,25 @@ class Model_Route extends Model{
      * @return mixed
      */
     public function handling_route($points,$timeMatrix,$date){
+        $this->_timeMatrix = $timeMatrix;
         // Check on existing routes
         // If there is no routes then calculate new route
         if (!$this->checks_existence_route($date)) {
+            if (count($points) <= 0)
+                throw new Model_Except("Необходима хотя бы 1 точка");
 
-           $model_points = new Model_Delivery_Points();
+            $model_points = new Model_Delivery_Points();
             //check exciting points in Database
             foreach ($points as $value)
                 if (!$model_points->isset_point($value['point_id']))
                     throw new Model_Except("Одной из выбранных точек не существует в БД");
             // Get paths by algorithm
-            $ways = $this->calculate_route($points, $timeMatrix);
+            $ways = $this->calculate_route($points);
             $tracks = array();
 
             // get info about delivery point && path
             foreach ($ways as $way) {
-                foreach ($way['path'] as $dot) {
+                foreach ($way as $dot) {
                     $point = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
                     $point['point_id'] = $points[$dot['index_point']]['point_id'];
 
@@ -80,12 +90,16 @@ class Model_Route extends Model{
                     $point['time'] = $dot['time'];
                     $route['points'][] = $point;
                 }
-                $route['total_time']=$way['total_time'];
+
+                // Total time of route last point time - first point + time start delivery
+                $total_time = $point['time'] + $this->time_for_delivery - $route['points'][0]['time'];
+
+                $route['total_time'] = $total_time;
                 $tracks[] = $route;
                 $route = array();
             }
             //delete useless variables
-            unset($ways,$route,$point,$point_info,$value,$way,$dot);
+            unset($ways, $route, $point, $point_info, $value, $way, $dot);
 
             // save calculated routes into database
             $this->save_route($tracks, $date);
@@ -118,12 +132,11 @@ class Model_Route extends Model{
 
     /**
      * Calculate routes by points and time matrix
-     * @param $points
-     * @param $timeMatrix
+     * @param $points array {[int point_id, int time_start , int time_end],[]....}
      * @return array
      * @throws Model_Except
      */
-    private function calculate_route($points,$timeMatrix){
+    private function calculate_route($points){
         $used_points = array();
         for ($i = 0; $i< count($points); $i++)
             $used_points[$i]=false;
@@ -131,30 +144,26 @@ class Model_Route extends Model{
         $path = array();
         $calculation = true;
         // Check that we can enter this point from warehouse
-        for ($i =0 ;$i< count($timeMatrix[0]);$i++)
-            if ($timeMatrix[0][$i] != null)
-                if ($timeMatrix[0][$i] + $this->time_start_delivery > $points[$i-1]['time_end'])
+        for ($i =0 ;$i< count($this->_timeMatrix[0]);$i++)
+            if ($this->_timeMatrix[0][$i] != null)
+                if ($this->_timeMatrix[0][$i] + $this->time_start_delivery > $points[$i-1]['time_end'])
                     throw new Model_Except("Для точки $i задано не выполнимое условие по времени доставки");
 
         while ($calculation){
-            $bestPath = $this->routeByTime(-1, $this->time_start_delivery, array(),$used_points, $timeMatrix, $points);
-            // Запись использованных точек
-            $used_points = $bestPath['usedArray'];
-            // Запись пути и его общего времени
-            $path_info['path'] = $bestPath['path'];
-            $path_info['total_time'] = $bestPath['time'];
-            $path[] = $path_info;
-
+            $this->_position=-1;
+            $path[] = $this->routeByTime($this->time_start_delivery,[],$used_points,$points);
             $calculation = false;
-            // Проверка на то что все точки пройдены
-            foreach ($used_points as $value)
-                if (!$value){
+            for ($i = 0; $i< count($used_points);$i++)
+                if ($used_points[$i] == false)
                     $calculation = true;
-                    break;
-                }
         }
         return $path;
     }
+
+    /**
+     * @var int indicate at what point stay now
+     */
+    private $_position;
 
     /**
      * Sort descending Callback
@@ -163,74 +172,66 @@ class Model_Route extends Model{
      * @return int
      */
     private function callback_sort_by_time($a,$b){
-        return (($a['time']==null) || ($b['time'] == null)) ? (($a['time'] == null) ? 1 : -1) : ($a['time'] - $b['time']);
+        if ($a['time_start']!==$b['time_start'])
+            return $a['time_start'] - $b['time_start'];
+        // fucking magic
+        return $this->_timeMatrix[$this->_position][$a['index']+1] - $this->_timeMatrix[$this->_position][$b['index']+1];
     }
+
+
+    /**
+     * Return best point to go next from current point
+     * but seriously, it`s still a little magic
+     * @param $time
+     * @param $used_array
+     * @param $points_array
+     * @return bool
+     */
+    private function next_point_where_we_going($time,$used_array,$points_array){
+        for ($i =0 ; $i < count($points_array);$i++)
+            $points_array[$i]['index'] = $i;
+
+        usort($points_array,array($this,'callback_sort_by_time'));
+
+        // one more fucking magic
+        for ($i =0 ; $i < count($points_array);$i++)
+            if (!$used_array[$points_array[$i]['index']])
+                if($time + $this->_timeMatrix[$this->_position][$points_array[$i]['index']+1] + $this->time_for_delivery <= $points_array[$i]['time_end'])
+                    return $points_array[$i]['index'];
+        return false;
+    }
+
 
     /**
      * Recursive algorithm of calculating Route
      * Магия в чистом виде, не трогать и не пытаться понять
-     * @param $position
      * @param $time
      * @param $path
      * @param $usedArray
-     * @param $timeMatrix
      * @param $points
      * @return array|null
      */
-    private function routeByTime($position,$time,$path,$usedArray,$timeMatrix,$points){
+    private function routeByTime($time,$path,&$usedArray,$points){
         // Определение точки из которой двигаемся -1 - склад
-        ($position != -1) ? ($usedArray[$position-1]=true) : ($position = 0);
+        ($this->_position != -1) ? ($usedArray[$this->_position-1]=true) : ($this->_position = 0);
 
-        $canmove = false;
-        $temp = array();
-        $answer = array('usedArray' => $usedArray,
-                        'path' => $path,
-                        'time' => $time);
-        // создание массива содержащего строку из матрицы времени
-        for ($i = 0; $i < count($timeMatrix);$i++)
-            $temp[] = array('index' =>$i, 'time' => $timeMatrix[$position][$i]);
+        //Определяем слуедующую точку в которую мы движемся
+        $next_point = $this->next_point_where_we_going($time,$usedArray,$points);
 
-        // сортировка по возрастанию
-        usort($temp,array($this,'callback_sort_by_time'));
+        if ($next_point !== false){
+            $new_time= $time+ $this->_timeMatrix[$this->_position][$next_point+1];
+            if ($time + $this->_timeMatrix[$this->_position][$next_point+1] <= $points[$next_point]['time_start'])
+                $new_time = $points[$next_point]['time_start'];
 
-        $best = null;
-        for ($i = 0; $i < count($temp);$i++){
-            // Если мы можем попаст в точку
-            if ($temp[$i]['time']!= null)
-                // и это точка доступна
-                if (!$usedArray[$temp[$i]['index']-1])
-                    // Если курьер поподает по времени
-                    if ($time + $temp[$i]['time'] < $points[$temp[$i]['index']-1]['time_end']){
-                        // ожидаем при приезде раньше времени
+            $temp ['index_point'] = $next_point;
+            $temp ['time'] = $new_time;
+            $path[] = $temp;
+            unset($temp);
 
-                        $time_temp = $time;
-                        $time_temp+=$temp[$i]['time']+$this->time_for_delivery;
-                        if ($time + $temp[$i]['time'] < $points[$temp[$i]['index']-1]['time_start'])
-                            $time_temp = $points[$temp[$i]['index']-1]['time_start']+$this->time_for_delivery;
-
-                        $canmove = true;
-
-                        // добавляем точку в путь
-                        $_path =  $path;
-                        $path_info['index_point']= $temp[$i]['index']-1;
-                        $path_info['time'] = $time + $temp[$i]['time'];
-                        $_path[] = $path_info;
-                        // Рекурсивная обработка с учетом времени затраченного на доставку
-                        $temp_path = $this->routeByTime($temp[$i]['index'],$time_temp,$_path, $usedArray,$timeMatrix,$points);
-                        if ($best == null)
-                            $best = $temp_path;
-                        else
-                            if (count($best['path']) < count($temp_path['path']))
-                                if (count($temp_path['path'])*($best['time']/count($best['path'])) > ($temp_path['time']/count($temp_path['path'])))
-                                    $best = $temp_path;
-
-                    }
+            $this->_position= $next_point+1;
+            return $this->routeByTime($new_time+$this->time_for_delivery,$path,$usedArray,$points);
         }
-        if (!$canmove){
-            return $answer;
-        }
-        else
-            return $best;
+        return $path;
     }
 
     /**
