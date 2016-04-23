@@ -48,40 +48,6 @@ class Model_Route extends Model{
     }
 
     /**
-     * Feature is in development
-     * Don`t use it
-     */
-   public function get_pdf($date){
-        $pdf_unit = new FPDF();
-        $model_orders = new Model_Orders();
-        $pdf_unit->SetTitle('Маршруты доставки');
-        $pdf_unit->SetAuthor('Delivery_System');
-        $pdf_unit->SetTextColor(50,60,100);
-
-        $routes = $this->get_route_by_date($date);
-        $height = 20;
-        foreach ($routes as $key=>$route){
-            $hours = floor($route['total_time']/3600);
-            $minutes = floor(($route['total_time'] - $hours*3600)/60);
-            $route_number = $key+1;
-
-            $pdf_unit->AddPage('P');
-            $pdf_unit->SetFont('Helvetica','B',20);
-            $pdf_unit->SetXY(20,$height);
-            $pdf_unit->Write(10,"Маршрут №$route_number занимает времени: $hours:$minutes");
-
-            $height+=20;
-            foreach ($route['points'] as $point){
-                $pdf_unit->SetXY(50,$height);
-                $pdf_unit->SetFont('Helvetica','',14);
-                $pdf_unit->Write(10,'Адрес доставки: ');
-                $model_orders->get_list_orders_by_point_id($point['point_id']);
-            }
-        }
-
-    }
-
-    /**
      * Checks an existing routes and if it`s not existing
      * calculate new route and write into database
      * @param $points array {[int point_id, int time_start , int time_end],[]....}
@@ -238,9 +204,9 @@ class Model_Route extends Model{
                         // ожидаем при приезде раньше времени
 
                         $time_temp = $time;
-                        ($position == 0) ? ($time_temp+=$temp[$i]['time']) : ($time_temp+=$temp[$i]['time']+$this->time_for_delivery);
+                        $time_temp+=$temp[$i]['time']+$this->time_for_delivery;
                         if ($time + $temp[$i]['time'] < $points[$temp[$i]['index']-1]['time_start'])
-                            $time_temp = $points[$temp[$i]['index']-1]['time_start']+$this->time_start_delivery;
+                            $time_temp = $points[$temp[$i]['index']-1]['time_start']+$this->time_for_delivery;
 
                         $canmove = true;
 
@@ -250,7 +216,7 @@ class Model_Route extends Model{
                         $path_info['time'] = $time + $temp[$i]['time'];
                         $_path[] = $path_info;
                         // Рекурсивная обработка с учетом времени затраченного на доставку
-                        $temp_path = $this->routeByTime($temp[$i]['index'],($time + $temp[$i]['time']+$this->time_for_delivery),$_path, $usedArray,$timeMatrix,$points);
+                        $temp_path = $this->routeByTime($temp[$i]['index'],$time_temp,$_path, $usedArray,$timeMatrix,$points);
                         if ($best == null)
                             $best = $temp_path;
                         else
