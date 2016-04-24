@@ -740,38 +740,43 @@ function loadPoints()
 			var delay = 10;
 			for (var i = 0; i < Points.length; i++) {
 				Points[i].deleteLocal();
-				delay = 1000;
 			}
-			setTimeout(function () {
-				setVar("pending", true);
-				var day = new Date(dateBlock.value);
-				var body = { delivery_date: day.getTime() / 1000 }
-				var req = new Request("Points/get_points_by_date", body);
-				req.callback = function (Response) {
-					try {
-						var answer = JSON.parse(Response);
-						if (answer.data.state == "success")
-							{
-								delVar("pending");
-								if (answer.data.points_id)
-									for (var i = 0; i < answer.data.points_id.length; i++)
-										{
-											var t = new Point();
-											t.id = answer.data.points_id[i];
-											t.load();
-											Points.push(t);
-										}
-								dateBlock.removeAttribute("disabled");
+			var removeEnded = setInterval(function () {
+				try {
+					if (Points.length == 0) {
+						clearInterval(removeEnded);
+						setVar("pending", true);
+						var day = new Date(dateBlock.value);
+						var body = { delivery_date: day.getTime() / 1000 }
+						var req = new Request("Points/get_points_by_date", body);
+						req.callback = function (Response) {
+							try {
+								var answer = JSON.parse(Response);
+								if (answer.data.state == "success")
+									{
+										if (answer.data.points_id)
+											for (var i = 0; i < answer.data.points_id.length; i++)
+												{
+													var t = new Point();
+													t.id = answer.data.points_id[i];
+													t.load();
+													Points.push(t);
+												}
+										dateBlock.removeAttribute("disabled");
+										delVar("pending");
+									}
+								else { delVar("pending"); new Dialog(answer.data.message); dateBlock.removeAttribute("disabled"); }
 							}
-						else {	new Dialog(answer.data.message); dateBlock.removeAttribute("disabled"); }
+							catch (ex) { console.error(ex); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
+						}
+						req.do();
 					}
-					catch (ex) { console.error(ex); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
 				}
-				req.do();
-			}, delay);
+				catch (ex) { console.error(ex); delVar("pending"); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
+			}, 200);
 		}
 	}
-	catch (ex) { console.error(ex); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
+	catch (ex) { console.error(ex); delVar("pending"); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
 }
 
 /** Рассчитывает блок Итого: расчет количества точек и общей стоимости
