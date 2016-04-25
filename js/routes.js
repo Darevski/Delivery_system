@@ -37,8 +37,8 @@ function DoOnLoad()
 		document.body.style.opacity = "1";
 		/* Меню */
 		var top_tabs = document.getElementById("tab-bar").children;
-		top_tabs[0].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/"; }, 600); }
-		top_tabs[1].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/Route"; }, 600); }
+		top_tabs[0].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { var date = new Date(document.querySelector('#store-date > input[type="date"]').value); setVar("onDate", date.getTime() / 1000); window.location.href = "/"; }, 600); }
+		top_tabs[1].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { var date = new Date(document.querySelector('#store-date > input[type="date"]').value); setVar("onDate", date.getTime() / 1000); window.location.href = "/Route"; }, 600); }
 		document.querySelector('#store-date > input[type="date"]').onchange = loadOnDate;
 		if (getVar("onDate"))
 			setDateNload(getVar("onDate"));
