@@ -100,6 +100,7 @@ function Dialog(message, options)
 	this.options = (options != undefined) ? options.reverse() : [];
 	this.message = (message) ? message : "Что-то пошло не так";
 	this.create();
+	delVar("pending");
 }
 Dialog.prototype = {
 	DialogClear: function () {

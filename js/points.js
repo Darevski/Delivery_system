@@ -784,18 +784,18 @@ function loadPoints()
 											}
 										}, 200);
 									}
-								else { delVar("pending"); new Dialog(answer.data.message); dateBlock.removeAttribute("disabled"); }
+								else { new Dialog(answer.data.message); dateBlock.removeAttribute("disabled"); }
 							}
-							catch (ex) { console.error(ex); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
+							catch (ex) { console.error(ex); dateBlock.removeAttribute("disabled"); new Dialog(ex.message); }
 						}
 						req.do();
 					}
 				}
-				catch (ex) { console.error(ex); delVar("pending"); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
+				catch (ex) { console.error(ex); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
 			}, 200);
 		}
 	}
-	catch (ex) { console.error(ex); delVar("pending"); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
+	catch (ex) { console.error(ex); new Dialog(ex.message); dateBlock.removeAttribute("disabled"); }
 }
 
 /** Рассчитывает блок Итого: расчет количества точек и общей стоимости
@@ -842,6 +842,8 @@ function calcRoutes() {
 							{
 								if (answer.data.routes.length == 0)
 									{
+										if (Points.length < 1)
+											throw new Error("Нет точек для построения маршрута");
 										var timeMatrix = [];
 										var counter = Points.length * (Points.length - 1);
 										for (var i = 0; i < Points.length+1; i++) {
@@ -849,16 +851,73 @@ function calcRoutes() {
 											for (var j = 0; j < Points.length+1; j++)
 												timeMatrix[i][j] = null;
 										}
-										Points.forEach(function (item, i) {
-											Points.forEach(function (item, j) {
-												if (i != j)
-													ymaps.route([[Points[i].coordinates.latitude, Points[i].coordinates.longitude], [Points[j].coordinates.latitude, Points[j].coordinates.longitude]], {avoidTrafficJams: true}).then(
-														function (route) {
-															//myMap.geoObjects.add(route);
-															counter--;
-															timeMatrix[i+1][j+1] = route.properties.getAll().RouterRouteMetaData.jamsTime;
-															if (counter == 0) {
-																/* Устанавливаем координаты начальной точки (склада) TODO: получать из списка*/
+										if (Points.length > 1) {
+											Points.forEach(function (item, i) {
+												Points.forEach(function (item, j) {
+													if (i != j)
+														ymaps.route([[Points[i].coordinates.latitude, Points[i].coordinates.longitude], [Points[j].coordinates.latitude, Points[j].coordinates.longitude]], {avoidTrafficJams: true}).then(
+															function (route) {
+																//myMap.geoObjects.add(route);
+																counter--;
+																timeMatrix[i+1][j+1] = route.properties.getAll().RouterRouteMetaData.jamsTime;
+																if (counter == 0) {
+																	/* Устанавливаем координаты начальной точки (склада) TODO: получать из списка*/
+																	var lat = 53.9383;
+																	var lon = 27.5783;
+																	var counter1 = Points.length;
+																	var infoArray = [];
+																	Points.forEach(function (item, u) {
+																		ymaps.route([[lat,lon], [Points[u].coordinates.latitude, Points[u].coordinates.longitude]], {avoidTrafficJams: true}).then(
+																			function (route) {
+																				counter1--;
+																				timeMatrix[0][u+1] = route.properties.getAll().RouterRouteMetaData.jamsTime;
+																				infoArray[u] = {
+																					point_id: Points[u].id,
+																					time_start: (parseInt(Points[u].time.start[0] + Points[u].time.start[1]) * 60 * 60) + (parseInt(Points[u].time.start[3] + Points[u].time.start[4]) * 60) + (parseInt(Points[u].time.start[6] + Points[u].time.start[7])),
+																					time_end: (parseInt(Points[u].time.end[0] + Points[u].time.end[1]) * 60 * 60) + (parseInt(Points[u].time.end[3] + Points[u].time.end[4]) * 60) + (parseInt(Points[u].time.end[6] + Points[u].time.end[7]))
+																				}
+																				//myMap.geoObjects.add(route);
+																				if (counter1 == 0) {
+																					/*console.table(infoArray);
+																					console.table(timeMatrix);*/
+																					var bodyCalc = {
+																						points: infoArray,
+																						timeMatrix: timeMatrix,
+																						date: date.getTime() / 1000
+																					}
+																					var reqCalc = new Request("/Route/calculation", bodyCalc);
+																					reqCalc.callback = function (Response) {
+																						try {
+																							var answer = JSON.parse(Response);
+																							if (answer.data.state == "success")
+																								{
+																									new Dialog("Маршрут успешно построен", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", bodyCalc.date); window.location.href = "/Route"; }}]);
+																								}
+																							else { new Dialog(answer.data.message); }
+																						}
+																						catch (ex) { console.error(ex); new Dialog(ex.message); }
+																					}
+																					reqCalc.do();
+																				}
+																			},
+																			function (error) {
+																				new Dialog('Возникла ошибка: ' + error.message);
+																			}
+																		);
+																	});
+																}
+															},
+															function (error) {
+																new Dialog('Возникла ошибка: ' + error.message);
+															}
+														);
+
+												});
+											});
+										}
+										else {
+											// FIX IF 1 POINT ONLY
+											// TODO: реализовать способом, иным от копипаста
 																var lat = 53.9383;
 																var lon = 27.5783;
 																var counter1 = Points.length;
@@ -889,8 +948,6 @@ function calcRoutes() {
 																						if (answer.data.state == "success")
 																							{
 																								new Dialog("Маршрут успешно построен", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", bodyCalc.date); window.location.href = "/Route"; }}]);
-																								loader.purge();
-																								delVar("pending");
 																							}
 																						else { new Dialog(answer.data.message); }
 																					}
@@ -904,17 +961,11 @@ function calcRoutes() {
 																		}
 																	);
 																});
-															}
-														},
-														function (error) {
-															new Dialog('Возникла ошибка: ' + error.message);
-														}
-													);
-
-											});
-										});
+											
+											
+										}
 									}
-								else { delVar("pending"); new Dialog("На данную дату маршрут уже существует", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", body.date); window.location.href = "/Route"; }}]); }
+								else { new Dialog("Маршрут уже существует", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", body.date); window.location.href = "/Route"; }}]); }
 							}
 						else {	new Dialog(answer.data.message); }
 					}
