@@ -69,7 +69,7 @@ class Model_Route extends Model{
         // If there is no routes then calculate new route
         if (!$this->checks_existence_route($date)) {
             if (count($points) <= 0)
-                throw new Model_Except("Необходима хотя бы 1 точка");
+                throw new Model_Except("Для постороения маршрута необходима хотя бы 1 точка");
 
             $model_points = new Model_Delivery_Points();
             //check exciting points in Database
@@ -83,15 +83,24 @@ class Model_Route extends Model{
             // get info about delivery point && path
             foreach ($ways as $way) {
                 foreach ($way as $dot) {
-                    $point = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
+                    $point_info = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
+
                     $point['point_id'] = $points[$dot['index_point']]['point_id'];
 
-                    $point['address'] = $point['street'] . ' ' . $point['house'];
+                    $point['latitude'] = $point_info['latitude'];
+                    $point['longitude'] =$point_info['longitude'];
+
+                    $point['address'] = $point_info['street'].' д.'.$point_info['house'].' кв. '.$point_info['flat'];
+
+                    $point['time_start'] = $point_info['time_start'];
+                    $point['time_end'] = $point_info['time_end'];
+
                     $point['time'] = $dot['time'];
+
                     $route['points'][] = $point;
                 }
-
-                // Total time of route last point time - first point + time start delivery
+                /* FIXME Исправить общее время, как путь до 1 точки + оптимальное время доставки последней точки + время на доставку - оп. время 1 точки */
+                // Total time of route last point time - first point + time for delivery
                 $total_time = $point['time'] + $this->time_for_delivery - $route['points'][0]['time'];
 
                 $route['total_time'] = $total_time;
@@ -196,6 +205,7 @@ class Model_Route extends Model{
         // one more fucking magic
         for ($i =0 ; $i < count($points_array);$i++)
             if (!$used_array[$points_array[$i]['index']])
+                /* FIXME При возможности доехать в точку, но нехватке времени на доставку запускается бесконечный цикл*/
                 if($time + $this->_timeMatrix[$this->_position][$points_array[$i]['index']+1] + $this->time_for_delivery <= $points_array[$i]['time_end'])
                     return $points_array[$i]['index'];
         return false;

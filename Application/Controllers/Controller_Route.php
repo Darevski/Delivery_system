@@ -149,12 +149,12 @@ class Controller_Route extends Controller
     }
 
     /**
-     * Feature is in development
+     * Feature is on development
      * @throws UFO_Except
      */
-    private function action_get_pdf_routes(){
+    public function action_get_pdf_routes(){
         // Example Post Request
-        $input_json = '{"date":1459448664}';
+        $input_json = '{"date":'.time().'}';
 
         //$input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
         $decoded_json = $this->Filter_unit->decode_Json($input_json);
