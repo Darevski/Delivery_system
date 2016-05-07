@@ -4,6 +4,10 @@
   margin: 0.25in;
 }
 
+.page{
+    page-break-inside: avoid;
+}
+
 *{
   font-family: dejavu sans;
 }
@@ -27,8 +31,12 @@ body {
 }
 
 h1 {
-  font-size: 1.4em;
+  font-size: 1.2em;
   font-style: italic;
+}
+
+a{
+  text-decoration: none;
 }
 
 /* Footer
@@ -72,7 +80,7 @@ h1 {
 /* Change order specific
 -----------------------------------------------------------------------*/
 table.info{
-  font-size: 10pt;
+  font-size: 8pt;
   border-top: 1px solid black;
 }
 

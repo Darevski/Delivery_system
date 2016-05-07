@@ -185,7 +185,7 @@ class Model_Delivery_Points extends Model{
             throw new Model_Except("Точки доставки не существует");
 
         $query = "SELECT total_cost,identifier_order,street,house,note,entry,floor,flat,latitude,longitude,
-                phone_number,time_start,time_end,delivery_Date,order_Date FROM Delivery_Points WHERE Point_ID=?i";
+                phone_number,time_start,time_end,delivery_date,order_Date FROM Delivery_Points WHERE Point_ID=?i";
         $result_of_query = $this->database->getRow($query,$point_id);
         //conversion output types
         settype($result_of_query['total_cost'],"float");
