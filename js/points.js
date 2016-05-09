@@ -120,6 +120,7 @@ Point.prototype = {
 		try {
 			if (this.isAdded)
 				throw new Error("Ошибка создания. Элемент уже присутствует.");
+			var _this = this;
 			this.isAdded = 1;
 			var _order = document.createElement("div");
 			_order.setAttribute("class", "order");
@@ -128,7 +129,6 @@ Point.prototype = {
 			var _t2 = document.createElement("div");
 			
 			_t1.setAttribute("class", "order-header");
-			var _this = this;
 			_t1.onclick = function () { _this.toggle(); }
 			_t2.setAttribute("class", "button-toggle");
 			_t1.appendChild(_t2);
@@ -271,6 +271,7 @@ Point.prototype = {
 								balloonContent: this.address.street + ", " + this.address.house
 					}
 				}, { preset: 'islands', iconColor: '#1faee9' });
+			this.mapObj.events.add("click", function () { _this.blink(); });
 			myMap.geoObjects.add(this.mapObj);
 			setTimeout(function () { _this.Object.style.marginLeft = ""; }, 550);
 		}
@@ -283,11 +284,13 @@ Point.prototype = {
     editDialog: function () {
         try {
 			if (!getVar("pending")) {
+				var mintime = "18:00";
+				var maxtime = "22:00";
 				setVar("pending", true);
 				var _this = this;
 				var _temp = document.createElement("div");
 				_temp.setAttribute("id", "edit-order");
-				_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" min="18:00" max="22:00" step="900" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to" min="18:00" max="22:00" step="900"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
+				_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" min="' + mintime + '" max="' + maxtime + '" step="900" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to" min="' + mintime + '" max="' + maxtime + '" step="900"></div><div id="edit-order-phone"><p>Телефон: </p><input placeholder="телефон" type="tel"></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
 				_temp.getElementsByTagName("p")[0].innerHTML = this.uniq;
 				(this.address.street) && (_temp.getElementsByTagName("input")[0].value = this.address.street);
 				(this.address.house)  && (_temp.getElementsByTagName("input")[1].value = this.address.house);
@@ -409,8 +412,8 @@ Point.prototype = {
 				_temp.style.opacity = "0";
 				document.body.appendChild(_temp);
 				delVar("pending");
-				document.querySelector("#edit-order-time > input.time-from").value = "17:00";
-				document.querySelector("#edit-order-time > input.time-to").value = "22:00";
+				document.querySelector("#edit-order-time > input.time-from").value = !!(_this.time.start) ? _this.time.start.substr(0,5) : mintime;
+				document.querySelector("#edit-order-time > input.time-to").value = !!(_this.time.end) ? _this.time.end.substr(0,5) : maxtime;
 				setTimeout(function () { _temp.style.opacity = ""; }, 10);
 			}
 		}
@@ -700,6 +703,23 @@ Point.prototype = {
 					}
 					catch (ex) { console.error(ex); new Dialog(ex.message); }
 				}, 500);
+			}
+		}
+		catch (ex) { console.error(ex); new Dialog(ex.message); }
+	},
+	
+	blink: function () {
+		try {
+			if (this.isAdded) {
+				var _this = this;
+				_this.Object.scrollIntoView(false);
+				_this.Object.style.backgroundColor = "#03a9f4";
+				setTimeout(function () {
+					try {
+						_this.Object.style.backgroundColor = "";
+					}
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
+				}, 340);
 			}
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
