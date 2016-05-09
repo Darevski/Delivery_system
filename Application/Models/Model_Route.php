@@ -82,7 +82,13 @@ class Model_Route extends Model{
 
             // get info about delivery point && path
             foreach ($ways as $way) {
+                $first_point = true;
                 foreach ($way as $dot) {
+                    // time from base to first point in route
+                    if ($first_point === true)
+                        $time_to_first_point = $timeMatrix[0][$dot['index_point']+1];
+
+                    $first_point = false;
                     $point_info = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
 
                     $point['point_id'] = $points[$dot['index_point']]['point_id'];
@@ -99,9 +105,9 @@ class Model_Route extends Model{
 
                     $route['points'][] = $point;
                 }
-                /* FIXME Исправить общее время, как путь до 1 точки + оптимальное время доставки последней точки + время на доставку - оп. время 1 точки */
-                // Total time of route last point time - first point + time for delivery
-                $total_time = $point['time'] + $this->time_for_delivery - $route['points'][0]['time'];
+
+                // Total time time ot first point from base + last point time - first point time + time for delivery
+                $total_time = $time_to_first_point + $point['time'] + $this->time_for_delivery - $route['points'][0]['time'];
 
                 $route['total_time'] = $total_time;
                 $tracks[] = $route;
@@ -155,7 +161,7 @@ class Model_Route extends Model{
         // Check that we can enter this point from warehouse
         for ($i =0 ;$i< count($this->_timeMatrix[0]);$i++)
             if ($this->_timeMatrix[0][$i] != null)
-                if ($this->_timeMatrix[0][$i] + $this->time_start_delivery > $points[$i-1]['time_end'])
+                if ($this->_timeMatrix[0][$i] + $this->time_start_delivery + $this->time_for_delivery > $points[$i-1]['time_end'])
                     throw new Model_Except("Для точки $i задано не выполнимое условие по времени доставки");
 
         while ($calculation){
@@ -205,7 +211,6 @@ class Model_Route extends Model{
         // one more fucking magic
         for ($i =0 ; $i < count($points_array);$i++)
             if (!$used_array[$points_array[$i]['index']])
-                /* FIXME При возможности доехать в точку, но нехватке времени на доставку запускается бесконечный цикл*/
                 if($time + $this->_timeMatrix[$this->_position][$points_array[$i]['index']+1] + $this->time_for_delivery <= $points_array[$i]['time_end'])
                     return $points_array[$i]['index'];
         return false;

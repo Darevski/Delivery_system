@@ -124,7 +124,7 @@ class Model_Reports{
         $point_template = $this->html_point_info_template;
         $point_info = $this->model_Delivery_Points->get_info_about_point($point_id);
 
-        $this->template_replace('{identifier}',$point_info['identifier_order'].' №'.$point_id,$point_template);
+        $this->template_replace('{identifier}',$point_info['identifier_order'].' ('.$point_id.')',$point_template);
 
         $entry = ($point_info['entry']) ? ' под.'.$point_info['entry'] : '';
         $floor = ($point_info['floor']) ? ' эт.'.$point_info['floor'] : '';
