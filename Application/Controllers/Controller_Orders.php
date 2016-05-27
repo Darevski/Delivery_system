@@ -12,7 +12,7 @@ use Application\Core\Controller;
 use Application\Core\View;
 use Application\Exceptions\UFO_Except;
 use Application\Models\Model_Orders;
-use Application\Units\Filter_Unit;
+use Application\Units\Authentication;
 
 /**
  * Class Controller_orders Controls actions related with orders
@@ -26,19 +26,16 @@ class Controller_Orders extends Controller{
      */
     private $Model_orders;
 
-    /**
-     * Unit that provides a filtering functions
-     * @var Filter_Unit
-     */
-    private $Filter_unit;
 
     /**
      * create an object of Model_Orders and insert it to $Model_orders
      * Controller_Orders constructor.
+     * Access level - 1 registered user
      */
     public function __construct(){
+        parent::__construct();
+        $this->Authentication->access_check(1);
         $this->Model_orders = new Model_Orders();
-        $this->Filter_unit = new Filter_Unit();
     }
 
     /**

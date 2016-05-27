@@ -7,7 +7,10 @@
  */
 
 namespace Application\Core;
+use Application\Exceptions\Auth_Except;
 use Application\Exceptions\UFO_Except;
+use Application\Units\Authentication;
+
 
 /**
  * Class Route transforms URL to control commands
@@ -25,10 +28,15 @@ class Route {
     public function Start($Route_parameters){
         $controller_name = '';
         $action = '';
+        $auth =new Authentication();
         // If it`s empty request, application display start_page
         if ($Route_parameters['target'] === 'Start_Page'){
             $controller_name = self::namespace_controllers.self::default_controller;
-            $action = self::default_action;
+            // if user is already entered
+            if ($_SESSION['privilege']>0)
+                $action = self::default_action;
+            else
+                $action = 'action_display_start_page';
         }
         // Display`s page by selected controller
         else if ($Route_parameters['target'] === 'Controller'){
@@ -67,4 +75,5 @@ class Route {
             throw new UFO_Except("File { $controller_name } does not exist",404);
 
     }
+
 }

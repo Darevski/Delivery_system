@@ -16,8 +16,13 @@ use Application\Core\View;
  * @package Application\Controllers
  */
 class Controller_Default extends Controller{
-    // Display Start Page
+    // Display Start Page for logged users
     public function action_start(){
         View::display('index.html');
+    }
+
+    // start page for guests
+    public function action_display_start_page(){
+        View::display('Start_Page_View.html');
     }
 }

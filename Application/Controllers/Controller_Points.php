@@ -9,10 +9,9 @@
 namespace Application\Controllers;
 use Application\Core\Controller;
 use Application\Core\View;
-
 use Application\Exceptions\UFO_Except;
 use Application\Models\Model_Delivery_Points;
-use Application\Units\Filter_Unit;
+use Application\Units\Authentication;
 
 /**
  * Class Controller_Points Controls actions related with delivery points
@@ -26,18 +25,14 @@ class Controller_Points extends Controller{
     private $Model_Points;
 
     /**
-     * Unit that provides a filtering functions
-     * @var Filter_Unit
-     */
-    private $Filter_unit;
-
-    /**
      * create an object of Model_Delivery_Points
      * Controller_Points constructor.
+     * Access level - 1 registered user
      */
     public function __construct(){
+        parent::__construct();
+        $this->Authentication->access_check(1);
         $this->Model_Points = new Model_Delivery_Points();
-        $this->Filter_unit = new Filter_Unit();
     }
 
     /**

@@ -7,6 +7,9 @@
  */
 namespace Application;
 
+use Application\Units\Authentication;
+use Dompdf\Exception;
+
 include_once 'Core/System/Psr4AutoLoaderClass.php';
 
 $Auto_Loader = new Core\System\Psr4AutoloaderClass();
@@ -28,8 +31,15 @@ $route_system->map('GET|POST','/[a:controller]/[a:action]','Application');
 $route_result = $route_system->match();
 //Application Start`s
 try{
+    //chekcs user data from session and database
+    $auth =new Authentication();
+    $auth->user_data_check();
+    
     $Route = new Core\Route();
     $Route->Start($route_result);
+}
+catch (Exceptions\Auth_Except $error) {
+    $error->exception_handling($error);
 }
 catch (Exceptions\UFO_Except $error){
     $error->classification_error($error);
