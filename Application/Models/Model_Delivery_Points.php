@@ -31,7 +31,6 @@ class Model_Delivery_Points extends Model{
      * @return mixed array{
      * 'point_id' -  id point that we inserted into database
      * 'identifier_order' - identifier of full order by that point in database
-     * 'state' - information about execute 'success' - all is ok
      * }
      */
     public function add_empty_point(){
@@ -68,7 +67,6 @@ class Model_Delivery_Points extends Model{
         // forming return array
         $return_info['point_id']= (int)$point_id;
         $return_info['identifier_order'] = $identifier_order;
-        $return_info['state'] = 'success';
         return $return_info;
     }
 
@@ -86,7 +84,6 @@ class Model_Delivery_Points extends Model{
      * @param string $time_end "H:i:s"
      * @param integer $phone_number
      * @param integer $delivery_date unix timestamp
-     * @return array {state: information about execute 'success' - all is ok}
      * @throws Model_Except
      * @throws \Application\Exceptions\Curl_Except
      * @throws \Application\Exceptions\Server_Error_Except
@@ -98,7 +95,8 @@ class Model_Delivery_Points extends Model{
         if (!$this->isset_point($point_id))
             throw new Model_Except("Обновляемой точки доставки не существует");
         // relevance date check
-        if (strtotime(date('d-m-Y')) >= $delivery_date)
+        /* FIXME: Проблема с клиентским временем  TEST IT*/
+        if (mktime(0,0,0) > $delivery_date)
             throw new Model_Except("Дата заказа не может быть меньше текущей");
         $delivery_date = date('Y-m-d',$delivery_date);
         //convert string time to "H:i:s"
@@ -124,15 +122,11 @@ class Model_Delivery_Points extends Model{
 
         $this->database->query($update_point_query,$street,$house,$note,$entry,$floor,$flat,
             $phone_number,$time_start,$time_end,$delivery_date,$longitude,$latitude,$point_id);
-
-        $execution_result['state'] = 'success';
-        return $execution_result;
     }
 
     /**
      * Delete Delivery point and Orders related with from database
      * @param integer $point_id
-     * @return array 'state' - information about execute 'success' - all is ok
      * @throws Model_Except
      */
     public function delete_point($point_id){
@@ -142,9 +136,6 @@ class Model_Delivery_Points extends Model{
 
         $delete_query = "DELETE FROM Delivery_Points WHERE Point_ID=?i LIMIT 1";
         $this->database->query($delete_query,$point_id);
-
-        $execution_result['state'] = 'success';
-        return $execution_result;
     }
 
     /**
@@ -163,13 +154,12 @@ class Model_Delivery_Points extends Model{
         foreach ($result_of_query as $value)
             $result['points_id'][] = (int)$value['Point_ID'];
 
-        $result['state'] = 'success';
         return $result;
     }
 
     /**
      * return info about selected point
-     * structure of output 'point_info'{
+     * structure of output {
      *  float 'total_cost'
      *  string 'identifier_order'
      *  string 'street'
@@ -195,7 +185,7 @@ class Model_Delivery_Points extends Model{
             throw new Model_Except("Точки доставки не существует");
 
         $query = "SELECT total_cost,identifier_order,street,house,note,entry,floor,flat,latitude,longitude,
-                phone_number,time_start,time_end,delivery_Date,order_Date FROM Delivery_Points WHERE Point_ID=?i";
+                phone_number,time_start,time_end,delivery_date,order_Date FROM Delivery_Points WHERE Point_ID=?i";
         $result_of_query = $this->database->getRow($query,$point_id);
         //conversion output types
         settype($result_of_query['total_cost'],"float");
@@ -205,9 +195,7 @@ class Model_Delivery_Points extends Model{
         settype($result_of_query['longitude'],"float");
         settype($result_of_query['phone_number'],"integer");
 
-        $result['point_info'] = $result_of_query;
-        $result['state'] = 'success';
-        return $result;
+        return $result_of_query;
     }
 
     /**

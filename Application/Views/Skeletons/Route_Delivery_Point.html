@@ -1,0 +1,36 @@
+<div class="page">
+    <table class="header">
+        <tr>
+            <td><h1 style="text-align: left; font-size: 12pt;">Точка доставки № {identifier}</h1></td>
+        </tr>
+    </table>
+
+    <table class="info">
+        <tr>
+            <td>Адрес: <strong>{address}</strong></td>
+        </tr>
+        <tr>
+            <td>Номер телефона: <strong>{phone_number}</strong></td>
+            <td>Доставка с: <strong>{time_start}</strong></td>
+        </tr>
+        <tr>
+            <td>Примечание: <strong>{note}</strong></td>
+            <td>Доставка до: <strong>{time_end}</strong></td>
+        </tr>
+    </table>
+
+    <table class="change_order_items">
+        <tbody>
+        <tr>
+            <th>Номер</th>
+            <th colspan="3">Описание</th>
+            <th>Стоимость</th>
+        </tr>
+        {orders_list}
+        <tr>
+            <td colspan="4" style="text-align: right;">Общая сумма:</td>
+            <td style="text-align: left;">{total_cost}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>

@@ -22,7 +22,7 @@ class Model_Orders extends Model{
      * @param integer $point_id unique id from Delivery point table
      * @param string $description description of item
      * @param float $cost cost of this item
-     * @return mixed
+     * @return integer - id in database of inserted order
      * @throws Model_Except
      */
     public function add_order($point_id,$description,$cost){
@@ -37,17 +37,13 @@ class Model_Orders extends Model{
 
         // Get id of inserted order
         $insert_id = $this->database->insertId();
-
-        $execution_result['order_id'] = $insert_id;
-        $execution_result['state'] = 'success';
-        return $execution_result;
+        return $insert_id;
     }
 
     /**
      * Return list of orders for selected delivery point
      * @param int $point_id
-     * @return mixed array{ orders[ {integer 'order_id', string 'description', float 'cost'} ],
-     *                      string state = 'success' -all is ok }
+     * @return mixed array{ [integer 'order_id', string 'description', float 'cost'] }
      * @throws Model_Except
      */
     public function get_list_orders_by_point_id($point_id){
@@ -63,16 +59,12 @@ class Model_Orders extends Model{
             settype($value['order_id'],"integer");
             settype($value['cost'],"float");
         }
-
-        $result['orders'] = $result_query;
-        $result['state'] = 'success';
-        return $result;
+        return $result_query;
     }
 
     /**
      * Delete Order From DataBase
      * @param integer $order_id
-     * @return mixed
      * @throws Model_Except
      */
     public function delete_order($order_id){
@@ -81,9 +73,6 @@ class Model_Orders extends Model{
 
         $delete_query = "DELETE FROM Orders WHERE Order_ID = ?i";
         $this->database->query($delete_query,$order_id);
-
-        $execution_result['state'] = 'success';
-        return $execution_result;
     }
 
     /**
@@ -91,7 +80,6 @@ class Model_Orders extends Model{
      * @param integer $order_id
      * @param string $description
      * @param float $cost
-     * @return mixed
      * @throws Model_Except
      */
     public function update_order($order_id,$description,$cost){
@@ -100,9 +88,6 @@ class Model_Orders extends Model{
 
         $update_query = "UPDATE Orders SET Description=?s,Cost=?s WHERE Order_ID=?i";
         $this->database->query($update_query,$description,$cost,$order_id);
-
-        $execution_result['state'] = 'success';
-        return $execution_result;
     }
 
     /**

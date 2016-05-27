@@ -21,6 +21,7 @@ $route_system = new Core\System\AltoRouter();
 // Register map of requests for Routing system
 // Method, route regex and point of target
 $route_system->map('GET|POST','/', 'Start_Page');
+$route_system->map('GET|POST','/[a:controller]','Controller');
 $route_system->map('GET|POST','/[a:controller]/[a:action]','Application');
 
 // Search matches between URL request and Reg maps

@@ -30,6 +30,11 @@ class Route {
             $controller_name = self::namespace_controllers.self::default_controller;
             $action = self::default_action;
         }
+        // Display`s page by selected controller
+        else if ($Route_parameters['target'] === 'Controller'){
+            $controller_name = self::namespace_controllers.self::controller_prefix.$Route_parameters['params']['controller'];;
+            $action = self::default_action;
+        }
         // Or if the are some control commands with controller and action for him
         // Application Execute requested action
         else if ($Route_parameters['target'] === 'Application'){

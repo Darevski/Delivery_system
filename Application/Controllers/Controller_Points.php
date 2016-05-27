@@ -47,7 +47,9 @@ class Controller_Points extends Controller{
      */
     public function action_add_empty_point(){
         $point_info = $this->Model_Points->add_empty_point();
-        View::output_json($point_info);
+        $output = $point_info;
+        $output['state']='success';
+        View::output_json($output);
     }
 
     /**
@@ -113,18 +115,18 @@ class Controller_Points extends Controller{
         if ($this->Filter_unit->date_check($valid_arr['delivery_date']) === false)
             throw new UFO_Except("Incorrect date in Json",400);
 
-        $result =$this->Model_Points->fill_point($valid_arr['address/street'],
-                                                 $valid_arr['address/house'],
-                                                 $valid_arr['address/entry'],
-                                                 $valid_arr['address/floor'],
-                                                 $valid_arr['address/flat'],
-                                                 $valid_arr['point_id'],
-                                                 $valid_arr['note'],
-                                                 $valid_arr['time/start'],
-                                                 $valid_arr['time/end'],
-                                                 $valid_arr['phone'],
-                                                 $valid_arr['delivery_date']);
-        View::output_json($result);
+        $this->Model_Points->fill_point($valid_arr['address/street'],
+                                        $valid_arr['address/house'],
+                                        $valid_arr['address/entry'],
+                                        $valid_arr['address/floor'],
+                                        $valid_arr['address/flat'],
+                                        $valid_arr['point_id'],
+                                        $valid_arr['note'],
+                                        $valid_arr['time/start'],
+                                        $valid_arr['time/end'],
+                                        $valid_arr['phone'],
+                                        $valid_arr['delivery_date']);
+        View::output_json(array('state'=>'success'));
     }
 
     /**
@@ -148,8 +150,8 @@ class Controller_Points extends Controller{
             throw new UFO_Except("incorrect Json value 'point_id' ",400);
 
         // if all checks are successful we are call model method
-        $result =$this->Model_Points->delete_point($point_id);
-        View::output_json($result);
+        $this->Model_Points->delete_point($point_id);
+        View::output_json(array('state'=>'success'));
     }
 
     /**
@@ -176,6 +178,7 @@ class Controller_Points extends Controller{
 
         // if all checks are successful we are call model method
         $result =$this->Model_Points->get_points_by_date($delivery_date);
+        $result['state']='success';
         View::output_json($result);
     }
 
@@ -199,6 +202,7 @@ class Controller_Points extends Controller{
      *  string 'delivery_date'
      *  string 'order_date'
      * }
+     * string state;
      * @throws UFO_Except
      * @throws \Application\Exceptions\Model_Except
      */
@@ -216,7 +220,9 @@ class Controller_Points extends Controller{
             throw new UFO_Except("incorrect Json value 'point_id' ",400);
 
         // if all checks are successful we are call model method
-        $result =$this->Model_Points->get_info_about_point($point_id);
+        $point_info =$this->Model_Points->get_info_about_point($point_id);
+        $result['point_info']=$point_info;
+        $result['state']='success';
         View::output_json($result);
 
     }

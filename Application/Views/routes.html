@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet/less" type="text/css" href="css/main.less">
-    <link rel="stylesheet/less" type="text/css" href="css/points.less">
+    <link rel="stylesheet/less" type="text/css" href="css/routes.less">
     <link rel="stylesheet" type="text/css" href="css/fonts.css">
     <link rel="stylesheet" type="text/css" href="css/loader.css">
 	<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
@@ -11,28 +11,23 @@
 </head>
 <body>
 	<div id="tab-bar"><!--
-	--><p style="border-bottom-color: #03a9f4;">Точки</p><!--
-	--><p>Маршруты</p><!--
+	--><p>Точки</p><!--
+	--><p style="border-bottom-color: #03a9f4;">Маршруты</p><!--
 	--><p></p><!--
 	--></div>
 	<div id="tab"><!--
 		--><div id="sets">
 			<div id="header"><div id="store-date">Дата:<input type="date"></div></div>
-			<div id="orderlist"></div>
+			<div id="pathlist"></div>
 			<div id="footer">
-				<div class="add-floating-button"></div>
-                <div id="calculate" class="add-floating-button"></div>
-				<div id="left-footer"><p>Итого:</p></div><div id="right-footer">
-					<p></p>
-					<p></p>
-				</div>
+				<div id="routes-print" class="add-floating-button"></div>
 			</div>
 		</div><!--
 		--><div id="map"></div>
 	</div>
 	<div id="low-footer"><a target="_blank" href="https://github.com/Darevski/Delivery_system">GitHub</a></div>
 	<script type="text/javascript" src="js/less.min.js"></script>
-	<script type="text/javascript" src="js/points.js"></script>
+	<script type="text/javascript" src="js/routes.js"></script>
 	<script type="text/javascript" src="js/main.js"></script>
 </body>
 </html>
