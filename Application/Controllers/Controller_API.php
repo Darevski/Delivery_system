@@ -25,15 +25,15 @@ class Controller_API extends Controller{
     }
 
     /**
-     * Login user into system
+     * auth user in system
      * @throws \Application\Exceptions\Auth_Except
      * @throws \Application\Exceptions\UFO_Except
      */
     public function action_user_enter(){
         // Example Post Request
-        $input_json = '{"login":"test","password":"test"}';
+        //$input_json = '{"login":"test1","password":"test"}';
 
-        //$input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+        $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
 
         // checks validity and decode input JSON
         $decoded_json = $this->Filter_unit->decode_Json($input_json);
