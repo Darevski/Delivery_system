@@ -100,6 +100,7 @@ class Model_Delivery_Points extends Model{
      * @param string $street
      * @param string $house
      * @param string $entry
+     * @param bool $cashless
      * @param integer $floor
      * @param integer $flat
      * @param integer $point_id
@@ -113,7 +114,7 @@ class Model_Delivery_Points extends Model{
      * @throws \Application\Exceptions\Server_Error_Except
      * @throws \Application\Exceptions\UFO_Except
      */
-    public function fill_point($storage_id,$company_id,$street,$house,$entry,$floor,$flat,$point_id,$note,$time_start,$time_end,$phone_number,$delivery_date){
+    public function fill_point($storage_id,$company_id,$street,$house,$entry,$floor,$flat,$point_id,$note,$time_start,$time_end,$phone_number,$delivery_date,$cashless){
         // checks thats storage are exist
         if (!$this->Model_storage->isset_storge($storage_id,$company_id))
             throw new Model_Except("Выбранного склада не существует, обновите страницу");
@@ -145,10 +146,10 @@ class Model_Delivery_Points extends Model{
         $longitude = $point_info->getLongitude();
 
         $update_point_query = "UPDATE Delivery_Points SET Street =?s, House=?s, Note=?s,Entry=?s,floor=?i,flat=?i,
-              phone_number=?i,time_start=?s,time_end=?s,Delivery_Date=?s,Longitude=?s, Latitude=?s WHERE Point_ID=?i and Storage_ID=?i";
+              phone_number=?i,time_start=?s,time_end=?s,Delivery_Date=?s,Longitude=?s, Latitude=?s,cashless=?s WHERE Point_ID=?i and Storage_ID=?i";
 
         $this->database->query($update_point_query,$street,$house,$note,$entry,$floor,$flat,
-            $phone_number,$time_start,$time_end,$delivery_date,$longitude,$latitude,$point_id,$storage_id);
+            $phone_number,$time_start,$time_end,$delivery_date,$longitude,$latitude,$cashless,$point_id,$storage_id);
     }
 
     /**
@@ -205,6 +206,7 @@ class Model_Delivery_Points extends Model{
      *  string 'house'
      *  string 'note'
      *  string 'entry'
+     *  bool 'cashless'
      *  integer 'floor'
      *  integer 'flat'
      *  float 'latitude'
@@ -229,7 +231,7 @@ class Model_Delivery_Points extends Model{
         if (!$this->isset_point($point_id,$storage_id))
             throw new Model_Except("Точки доставки не существует");
 
-        $query = "SELECT total_cost,identifier_order,street,house,note,entry,floor,flat,latitude,longitude,
+        $query = "SELECT total_cost,identifier_order,street,house,cashless,note,entry,floor,flat,latitude,longitude,
                 phone_number,time_start,time_end,delivery_date,order_Date FROM Delivery_Points WHERE Point_ID=?i";
         $result_of_query = $this->database->getRow($query,$point_id);
         //conversion output types

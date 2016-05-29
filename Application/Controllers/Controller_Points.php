@@ -76,6 +76,7 @@ class Controller_Points extends Controller{
      *  int floor
      *  int flat
      * }
+     * bool cashless - 0 - cash / 1- bank transfer (безнал)
      * int(12) phone for example '375291234567'
      * time {
      *  string start: "H:i:s"
@@ -98,7 +99,8 @@ class Controller_Points extends Controller{
                        "time":{"start":"18:00:00","end":"20:15:00"},
                        "phone":375297768637,
                        "delivery_date":1459448664,
-                       "storage_id":1
+                       "storage_id":1,
+                       "cashless":true
                        }';
         */
         $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
@@ -118,7 +120,8 @@ class Controller_Points extends Controller{
             'time/end' => array('filter'=>FILTER_SANITIZE_STRING, 'flags'=>FILTER_FLAG_STRIP_LOW),
             'phone' => array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
             'delivery_date' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
-            'storage_id'=> array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE)
+            'storage_id'=> array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
+            'cashless'=> array('filter'=>FILTER_VALIDATE_BOOLEAN, 'flags'=>FILTER_NULL_ON_FAILURE),
         );
 
         $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
@@ -143,7 +146,8 @@ class Controller_Points extends Controller{
                                         $valid_arr['time/start'],
                                         $valid_arr['time/end'],
                                         $valid_arr['phone'],
-                                        $valid_arr['delivery_date']);
+                                        $valid_arr['delivery_date'],
+                                        $valid_arr['cashless']);
         View::output_json(array('state'=>'success'));
     }
 
@@ -227,6 +231,7 @@ class Controller_Points extends Controller{
      * int storage_id
      * structure of output 'point_info'{
      *  float 'total_cost'
+     *  bool 'cashless'
      *  string 'identifier_order'
      *  string 'street'
      *  string 'house'

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: May 29, 2016 at 02:23 AM
+-- Generation Time: May 29, 2016 at 10:29 PM
 -- Server version: 5.5.49-0ubuntu0.14.04.1
 -- PHP Version: 5.6.22-1+donate.sury.org~trusty+1
 
@@ -53,6 +53,7 @@ INSERT INTO `Company` (`id`, `name`, `login`, `password`, `email`, `privilege`) 
 CREATE TABLE IF NOT EXISTS `Delivery_Points` (
   `Point_ID` int(11) NOT NULL AUTO_INCREMENT,
   `Storage_ID` int(11) NOT NULL,
+  `cashless` tinyint(1) NOT NULL DEFAULT '0',
   `Note` text COLLATE utf8_unicode_ci,
   `Total_Cost` double NOT NULL DEFAULT '0',
   `identifier_order` text COLLATE utf8_unicode_ci,
