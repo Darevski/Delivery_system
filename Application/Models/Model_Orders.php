@@ -17,18 +17,26 @@ use Application\Exceptions\Model_Except;
  */
 class Model_Orders extends Model{
 
+
+    private $Model_points;
+
+    public function __construct() {
+        parent::__construct();
+        $this->Model_points = new Model_Delivery_Points();
+    }
+
     /**
      * Insert order in database table and return his id
      * @param integer $point_id unique id from Delivery point table
      * @param string $description description of item
      * @param float $cost cost of this item
+     * @param int $company_id
      * @return integer - id in database of inserted order
      * @throws Model_Except
      */
-    public function add_order($point_id,$description,$cost){
+    public function add_order($point_id,$description,$cost,$company_id){
         // using Delivery Points model for verify the existence of point
-        $model_points = new Model_Delivery_Points();
-        if (!$model_points->isset_point($point_id))
+        if (!$this->Model_points->isset_point($point_id,$company_id))
             throw new Model_Except("Точки доставки не существует");
         if ($cost <0)
             throw new Model_Except("Стоимость не может быть меньше 0");
@@ -43,13 +51,13 @@ class Model_Orders extends Model{
     /**
      * Return list of orders for selected delivery point
      * @param int $point_id
+     * @param int $company_id
      * @return mixed array{ [integer 'order_id', string 'description', float 'cost'] }
      * @throws Model_Except
      */
-    public function get_list_orders_by_point_id($point_id){
+    public function get_list_orders_by_point_id($point_id,$company_id){
         // using Delivery Points model for verify the existence of point
-        $model_points = new Model_Delivery_Points();
-        if (!$model_points->isset_point($point_id))
+        if ($this->Model_points->isset_point($point_id,$company_id))
             throw new Model_Except("Точки доставки не существует");
 
         $query = "SELECT order_id,description,cost FROM Orders WHERE Point_ID=?i";
@@ -65,10 +73,11 @@ class Model_Orders extends Model{
     /**
      * Delete Order From DataBase
      * @param integer $order_id
+     * @param int $company_id
      * @throws Model_Except
      */
-    public function delete_order($order_id){
-        if(!$this->isset_order($order_id))
+    public function delete_order($order_id,$company_id){
+        if(!$this->isset_order($order_id,$company_id))
             throw  new Model_Except("Заказа с указанным id не существует");
 
         $delete_query = "DELETE FROM Orders WHERE Order_ID = ?i";
@@ -80,10 +89,11 @@ class Model_Orders extends Model{
      * @param integer $order_id
      * @param string $description
      * @param float $cost
+     * @param int $company_id
      * @throws Model_Except
      */
-    public function update_order($order_id,$description,$cost){
-        if(!$this->isset_order($order_id))
+    public function update_order($order_id,$description,$cost,$company_id){
+        if(!$this->isset_order($order_id,$company_id))
             throw  new Model_Except("Заказа с указанным id не существует");
 
         $update_query = "UPDATE Orders SET Description=?s,Cost=?s WHERE Order_ID=?i";
@@ -91,14 +101,13 @@ class Model_Orders extends Model{
     }
 
     /**
-     * Check`s availability order in database
+     * Check`s availability order in database for current specified user
      * @param $order_id
      * @return bool
      */
-    public function isset_order($order_id){
-        $query = "SELECT 1 FROM Orders WHERE Order_ID = ?i LIMIT 1";
-        $result =  $this->database->query($query,$order_id);
-        $count = $this->database->numRows($result);
-        return ($count > 0) ? true : false;
+    public function isset_order($order_id,$company_id){
+        $query = "SELECT EXISTS (SELECT * FROM Orders WHERE Point_ID in (SELECT Point_ID FROM Delivery_Points WHERE Storage_ID in (SELECT id FROM Storages WHERE company_id=?i)) and Order_ID = ?i)";
+        $result = $this->database->getRow($query,$company_id,$order_id);
+        return ($result == 1) ? true : false;
     }
 }
