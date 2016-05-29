@@ -31,9 +31,9 @@ class Controller_API extends Controller{
      */
     public function action_user_enter(){
         // Example Post Request
-        //$input_json = '{"login":"test1","password":"test"}';
+        $input_json = '{"login":"test","password":"test"}';
 
-        $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+        //$input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
 
         // checks validity and decode input JSON
         $decoded_json = $this->Filter_unit->decode_Json($input_json);
@@ -55,6 +55,7 @@ class Controller_API extends Controller{
      */
     public function action_user_exit() {
         $this->Authentication->user_exit();
-        View::output_json(array('state'=>"success"));
+        //Redirect to main page
+        header("Location:/");
     }
 }

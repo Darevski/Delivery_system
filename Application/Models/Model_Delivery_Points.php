@@ -21,6 +21,19 @@ use Application\Units\Yandex_Geo_Api;
 class Model_Delivery_Points extends Model{
 
     /**
+     * @var Model_Storage
+     */
+    private $Model_storage;
+
+    /**
+     * Model_Delivery_Points constructor.
+     */
+    public function __construct() {
+        parent::__construct();
+        $this->Model_storage = new Model_Storage();
+    }
+
+    /**
      * Adding an empty point to database with identifier(yyyymmdd#today_orders+1) and Order_date as today date
      * Lock table 'Delivery_Point' to other SQL sessions on execution time
      *
@@ -28,20 +41,29 @@ class Model_Delivery_Points extends Model{
      * и сегодняшей датой в базу данных. Возвращает уникальный идентификатор точки и идентификатор заказа
      * Блокирует таблицу Delivery_Point' для других транзакций
      *
+     * @param integer $storage_id
+     * @param integer $company_id
+     *
+
      * @return mixed array{
      * 'point_id' -  id point that we inserted into database
      * 'identifier_order' - identifier of full order by that point in database
      * }
+     * @throws Model_Except
      */
-    public function add_empty_point(){
+     public function add_empty_point($storage_id,$company_id){
+        // checks thats storage are exist
+        if (!$this->Model_storage->isset_storge($storage_id,$company_id))
+            throw new Model_Except("Выбранного склада не существует, обновите страницу");
+
         $today = date('Ymd');
 
         // Lock Table to other user`s
         $this->database->query("LOCK TABLES Delivery_Points WRITE");
 
         // get identifier`s of order(point) from registered today points
-        $query_today_points = "SELECT identifier_order From Delivery_Points WHERE Order_Date = ?p";
-        $today_points = $this->database->getAll($query_today_points,$today);
+        $query_today_points = "SELECT identifier_order From Delivery_Points WHERE Order_Date = ?p and Storage_ID=?i";
+        $today_points = $this->database->getAll($query_today_points,$today,$storage_id);
 
         // get max value from identifier mask yyyymmdd#value
         foreach($today_points as &$value)
@@ -56,8 +78,8 @@ class Model_Delivery_Points extends Model{
         // make identifier with mask (yyyymmdd#max_value+1)
         $identifier_order = $today.'#'.($max_ind+1);
         // insert the values into database
-        $query_insert_empty_point = "INSERT INTO Delivery_Points (identifier_order,Order_Date) VALUES (?s,?p)";
-        $this->database->query($query_insert_empty_point,$identifier_order,$today);
+        $query_insert_empty_point = "INSERT INTO Delivery_Points (identifier_order,Order_Date,Storage_ID) VALUES (?s,?p,?i)";
+        $this->database->query($query_insert_empty_point,$identifier_order,$today,$storage_id);
         // get the id of point that we insert into database
         $point_id = $this->database->insertId();
 
@@ -73,6 +95,8 @@ class Model_Delivery_Points extends Model{
     /**
      * Update information of delivery point in database
      * Обновляет информацию о точке доставки в базе данных
+     * @param integer $storage_id
+     * @param integer $company_id
      * @param string $street
      * @param string $house
      * @param string $entry
@@ -89,10 +113,13 @@ class Model_Delivery_Points extends Model{
      * @throws \Application\Exceptions\Server_Error_Except
      * @throws \Application\Exceptions\UFO_Except
      */
-    public function fill_point($street,$house,$entry,$floor,$flat,$point_id,$note,$time_start,$time_end,$phone_number,$delivery_date){
+    public function fill_point($storage_id,$company_id,$street,$house,$entry,$floor,$flat,$point_id,$note,$time_start,$time_end,$phone_number,$delivery_date){
+        // checks thats storage are exist
+        if (!$this->Model_storage->isset_storge($storage_id,$company_id))
+            throw new Model_Except("Выбранного склада не существует, обновите страницу");
 
         // check that point isset in database
-        if (!$this->isset_point($point_id))
+        if (!$this->isset_point($point_id,$storage_id))
             throw new Model_Except("Обновляемой точки доставки не существует");
         // relevance date check
         /* FIXME: Проблема с клиентским временем  TEST IT*/
@@ -118,21 +145,26 @@ class Model_Delivery_Points extends Model{
         $longitude = $point_info->getLongitude();
 
         $update_point_query = "UPDATE Delivery_Points SET Street =?s, House=?s, Note=?s,Entry=?s,floor=?i,flat=?i,
-              phone_number=?i,time_start=?s,time_end=?s,Delivery_Date=?s,Longitude=?s, Latitude=?s WHERE Point_ID=?i";
+              phone_number=?i,time_start=?s,time_end=?s,Delivery_Date=?s,Longitude=?s, Latitude=?s WHERE Point_ID=?i and Storage_ID=?i";
 
         $this->database->query($update_point_query,$street,$house,$note,$entry,$floor,$flat,
-            $phone_number,$time_start,$time_end,$delivery_date,$longitude,$latitude,$point_id);
+            $phone_number,$time_start,$time_end,$delivery_date,$longitude,$latitude,$point_id,$storage_id);
     }
 
     /**
      * Delete Delivery point and Orders related with from database
+     * @param integer $storage_id
+     * @param integer $company_id
      * @param integer $point_id
      * @throws Model_Except
      */
-    public function delete_point($point_id){
+    public function delete_point($storage_id,$company_id,$point_id){
 
-        if (!$this->isset_point($point_id))
-            throw new Model_Except("Точки выбранной для удаления не существует");
+        if (!$this->Model_storage->isset_storge($storage_id,$company_id))
+            throw new Model_Except("Выбранного склада не существует, обновите страницу");
+
+        if (!$this->isset_point($point_id,$storage_id))
+            throw new Model_Except("Выбранной для удаления точки доставки не существует");
 
         $delete_query = "DELETE FROM Delivery_Points WHERE Point_ID=?i LIMIT 1";
         $this->database->query($delete_query,$point_id);
@@ -140,15 +172,22 @@ class Model_Delivery_Points extends Model{
 
     /**
      * return list of all delivery point`s on selected date
+     * @param integer $storage_id
+     * @param integer $company_id
      * @param $date int in unix timestamp
      * @return array(int) list of delivery point`s
+     * @throws Model_Except
      */
-    public function get_points_by_date($date){
+    public function get_points_by_date($storage_id,$company_id,$date){
         //convert unix timestamp to human format
+
+        if (!$this->Model_storage->isset_storge($storage_id,$company_id))
+            throw new Model_Except("Выбранного склада не существует, обновите страницу");
+
         $delivery_date = date('Ymd',$date);
 
-        $query = "SELECT Point_ID FROM Delivery_Points WHERE Delivery_Date=?s";
-        $result_of_query = $this->database->getAll($query,$delivery_date);
+        $query = "SELECT Point_ID FROM Delivery_Points WHERE Delivery_Date=?s and Storage_ID=?i";
+        $result_of_query = $this->database->getAll($query,$delivery_date,$storage_id);
 
         $result['points_id'] = array();
         foreach ($result_of_query as $value)
@@ -176,12 +215,18 @@ class Model_Delivery_Points extends Model{
      *  string 'delivery_date'
      *  string 'order_date'
      * }
+     * @param integer $storage_id
+     * @param integer $company_id
      * @param $point_id
      * @return mixed
      * @throws Model_Except
      */
-    public function get_info_about_point($point_id){
-        if (!$this->isset_point($point_id))
+    public function get_info_about_point($storage_id,$company_id,$point_id){
+
+        if (!$this->Model_storage->isset_storge($storage_id,$company_id))
+            throw new Model_Except("Выбранного склада не существует, обновите страницу");
+
+        if (!$this->isset_point($point_id,$storage_id))
             throw new Model_Except("Точки доставки не существует");
 
         $query = "SELECT total_cost,identifier_order,street,house,note,entry,floor,flat,latitude,longitude,
@@ -201,11 +246,12 @@ class Model_Delivery_Points extends Model{
     /**
      * Check`s availability point in database
      * @param $point_id
+     * @param $storage_id
      * @return bool
      */
-    public function isset_point($point_id){
-        $query = "SELECT 1 FROM Delivery_Points WHERE Point_ID = ?i LIMIT 1";
-        $result =  $this->database->query($query,$point_id);
+    public function isset_point($point_id,$storage_id){
+        $query = "SELECT 1 FROM Delivery_Points WHERE Point_ID = ?i and Storage_ID=?i LIMIT 1";
+        $result =  $this->database->query($query,$point_id,$storage_id);
         $count = $this->database->numRows($result);
         return ($count > 0) ? true : false;
     }
