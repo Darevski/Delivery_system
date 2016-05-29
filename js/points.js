@@ -1,6 +1,6 @@
 var Points = [];
 var myMap;
-var loader;
+
 /** Загружает карту, по загрузке выполняет функцию DoOnLoad
 *
 */

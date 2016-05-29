@@ -1,0 +1,96 @@
+@color-body: #F5F5F5;
+@color-main: #03a9f4;
+@color-block: #FFF;
+@color-main-shadow: rgba(0,0,0,0.4);
+@color-delimeter: rgba(160, 160, 160, 0.4);
+@color-good: #c0ca33;
+@color-bad: #f4511e;
+@color-table-hover: #EEEEEE;
+
+body {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	overflow: hidden;
+	font-family: 'Roboto', sans-serif;
+	color: @color-delimeter;
+}
+body > form {
+	box-shadow: 0 0 3px 1px @color-delimeter;
+	position: absolute;
+	height: 260px;
+	overflow: hidden;
+	width: 400px;
+	top: ~"calc(50% - 130px)";
+	left: ~"calc(50% - 200px)";
+	background-color: @color-body;
+}
+#auth-header {
+	height: 40px;
+	text-align: center;
+	width: 100%;
+	color: @color-main;
+	font-size: 20px;
+	line-height: 40px;
+}
+#auth-enter > input {
+	background-color: transparent;
+	width: 340px;
+	margin: 20px 20px 0px;
+	padding: 5px 10px;
+	height: 38px;
+	line-height: 40px;
+	border: 0;
+	border-bottom: 2px solid @color-delimeter;
+	transition: 0.5s;
+	font-size: 16px;
+	color: @color-main-shadow;
+}
+#auth-enter > input[status="error"] {
+	border-bottom: 2px solid @color-bad;
+}
+#auth-enter > input[status="good"] {
+	border-bottom: 2px solid @color-good;
+}
+#auth-enter > input::-webkit-input-placeholder { color: @color-main-shadow; font-size: 16px; }
+#auth-enter > input::-moz-placeholder { color: @color-main-shadow; font-size: 16px; }
+#auth-enter > input:-moz-placeholder { color: @color-main-shadow; font-size: 16px; }
+#auth-enter > input:-ms-input-placeholder { color: @color-main-shadow; font-size: 16px; }
+#auth-enter > input:focus {
+	outline: none;
+	border-bottom: 2px solid @color-main;
+}
+#auth-message,
+#auth-submit {
+	display: inline-block;
+	vertical-align: top;
+	margin-top: 20px;
+	transition: 0.2s;
+}
+#auth-message {
+	height: 50px;
+	line-height: 50px;
+	width: 160px;
+	padding: 0 20px;
+	color: @color-bad;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	opacity: 0;
+}
+#auth-submit:hover {
+	color: #FFF;
+	cursor: pointer;
+	background-color: @color-main;
+}
+#auth-submit {
+	width: 180px;
+	height: 50px;
+	text-align: center;
+	border: 0;
+	font-size: 16px;
+	line-height: 50px;
+}
+#auth-submit:focus {
+	outline: none;
+}

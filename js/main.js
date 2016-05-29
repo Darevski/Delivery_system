@@ -1,3 +1,4 @@
+var loader;
 window.onerror = function (message) {
 	new Dialog(message);
 	console.error(message);
