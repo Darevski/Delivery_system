@@ -38,6 +38,8 @@ function authTry() {
 }
 window.onload = function () {
 	document.body.style.opacity = "1";
-	document.getElementById("auth-enter").children[0].addEventListener("change", function () { this.removeAttribute("status"); });;
-	document.getElementById("auth-enter").children[1].addEventListener("change", function () { this.removeAttribute("status"); });;
+	document.getElementById("auth-enter").children[0].addEventListener("change", function () { this.removeAttribute("status"); });
+	document.getElementById("auth-enter").children[1].addEventListener("change", function () { this.removeAttribute("status"); });
+	if (document.getElementsByTagName("json")[0].innerHTML != "")
+		new Dialog("Ваши данные авторизации недействительны. Пожалуйста, авторизируйтесь вновь.");
 }

@@ -8,6 +8,7 @@
     <title>Доставка</title>
 </head>
 <body>
+	<json style="display: none"></json>
 	<form id="auth-form" autocomplete="off" onsubmit="authTry(); return false;">
 		<p id="auth-header">Авторизация</p>
 		<div id="auth-enter">
@@ -16,17 +17,6 @@
 		</div>
 		<p id="auth-message">Ошибка авторизации</p><button type="submit" id="auth-submit">Авторизироваться</button>
 	</form>
-	<!--<form action="/API/user_enter" method="post">
-		<p><b>Авторизация</b></p>
-		<p><input type="text" name="login"><Br>
-			<input type="password" name="password"><Br>
-		<p><input type="submit"></p>
-	</form>
-
-	<form action="/API/user_exit" method="post">
-
-		<p><input type="submit"></p>
-	</form>-->
 	<script type="text/javascript" src="js/less.min.js"></script>
 	<script type="text/javascript" src="js/auth.js"></script>
 	<script type="text/javascript" src="js/main.js"></script>
