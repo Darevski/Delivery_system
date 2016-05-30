@@ -14,7 +14,7 @@ use Application\Exceptions\UFO_Except;
 use Application\Models\Model_Reports;
 use Application\Models\Model_Route;
 use Application\Units\Filter_Unit;
-
+use Application\Units\Authentication;
 /**
  * Class Controller_Route
  * @package Application\Controllers
@@ -28,19 +28,16 @@ class Controller_Route extends Controller
      */
     private $Model_Route;
 
-    /**
-     * Unit that provides a filtering functions
-     * @var Filter_Unit
-     */
-    private $Filter_unit;
 
     /**
      * create an object of Model_Delivery_Points
      * Controller_Points constructor.
+     * Access level - 1 registered user
      */
     public function __construct(){
+        parent::__construct();
+        $this->Authentication->access_check(1);
         $this->Model_Route = new Model_Route();
-        $this->Filter_unit = new Filter_Unit();
     }
 
     /**

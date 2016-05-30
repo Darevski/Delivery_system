@@ -9,10 +9,8 @@
 namespace Application\Controllers;
 use Application\Core\Controller;
 use Application\Core\View;
-
 use Application\Exceptions\UFO_Except;
 use Application\Models\Model_Delivery_Points;
-use Application\Units\Filter_Unit;
 
 /**
  * Class Controller_Points Controls actions related with delivery points
@@ -26,27 +24,42 @@ class Controller_Points extends Controller{
     private $Model_Points;
 
     /**
-     * Unit that provides a filtering functions
-     * @var Filter_Unit
-     */
-    private $Filter_unit;
-
-    /**
      * create an object of Model_Delivery_Points
      * Controller_Points constructor.
+     * Access level - 1 registered user
      */
     public function __construct(){
+        parent::__construct();
+        $this->Authentication->access_check(1);
         $this->Model_Points = new Model_Delivery_Points();
-        $this->Filter_unit = new Filter_Unit();
     }
 
     /**
      * Adding empty point to database and output identifier of this point and unique point id
+     *
+     * Structure of JSON_Input
+     * int storage_id - Storage id in database
+     *
      * Example of output {"point_id":1,"identifier_order":"20160321#2"}
      * @api 'server/Points/add_empty_point'
      */
     public function action_add_empty_point(){
-        $point_info = $this->Model_Points->add_empty_point();
+
+        // Example Post Request
+        /*
+        $input_json = '{"storage_id":1 }';
+        */
+        $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+
+        // checks validity and decode input JSON
+        $decoded_json = $this->Filter_unit->decode_Json($input_json);
+
+        $storage_id = filter_var($decoded_json['storage_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
+
+        if (is_null($storage_id))
+            throw new UFO_Except("incorrect Json value 'point_id' ",400);
+
+        $point_info = $this->Model_Points->add_empty_point($storage_id,$_SESSION['id']);
         $output = $point_info;
         $output['state']='success';
         View::output_json($output);
@@ -63,6 +76,7 @@ class Controller_Points extends Controller{
      *  int floor
      *  int flat
      * }
+     * bool cashless - 0 - cash / 1- bank transfer (безнал)
      * int(12) phone for example '375291234567'
      * time {
      *  string start: "H:i:s"
@@ -70,6 +84,7 @@ class Controller_Points extends Controller{
      * }
      * unix timestamp delivery_date
      * int point_id - Unique value (Points_ID) from database Delivery_Points
+     * int storage_id - Storage id in database
      * @api 'server/Points/fill_empty_point'
      * @throws \Application\Exceptions\Model_Except
      * @throws \Application\Exceptions\UFO_Except
@@ -83,7 +98,9 @@ class Controller_Points extends Controller{
                        "point_id":2, "note":"Нерабочий домофон",
                        "time":{"start":"18:00:00","end":"20:15:00"},
                        "phone":375297768637,
-                       "delivery_date":1459448664
+                       "delivery_date":1459448664,
+                       "storage_id":1,
+                       "cashless":true
                        }';
         */
         $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
@@ -103,6 +120,8 @@ class Controller_Points extends Controller{
             'time/end' => array('filter'=>FILTER_SANITIZE_STRING, 'flags'=>FILTER_FLAG_STRIP_LOW),
             'phone' => array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
             'delivery_date' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
+            'storage_id'=> array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
+            'cashless'=> array('filter'=>FILTER_VALIDATE_BOOLEAN, 'flags'=>FILTER_NULL_ON_FAILURE),
         );
 
         $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
@@ -115,7 +134,9 @@ class Controller_Points extends Controller{
         if ($this->Filter_unit->date_check($valid_arr['delivery_date']) === false)
             throw new UFO_Except("Incorrect date in Json",400);
 
-        $this->Model_Points->fill_point($valid_arr['address/street'],
+        $this->Model_Points->fill_point($valid_arr['storage_id'],
+                                        $_SESSION['id'],
+                                        $valid_arr['address/street'],
                                         $valid_arr['address/house'],
                                         $valid_arr['address/entry'],
                                         $valid_arr['address/floor'],
@@ -125,47 +146,63 @@ class Controller_Points extends Controller{
                                         $valid_arr['time/start'],
                                         $valid_arr['time/end'],
                                         $valid_arr['phone'],
-                                        $valid_arr['delivery_date']);
+                                        $valid_arr['delivery_date'],
+                                        $valid_arr['cashless']);
         View::output_json(array('state'=>'success'));
     }
 
     /**
      * Delete Delivery point with related orders from database
-     * Structure of Json_input{int point_id}
+     * Structure of Json_input
+     * int point_id
+     * int storage_id
      * @api 'Server/Points/delete_point'
      * @throws UFO_Except
      * @throws \Application\Exceptions\Model_Except
      */
     public function action_delete_point(){
         // Example of Json_input
-        //$input_json = '{"point_id":1}';
+        /*
+        $input_json = '{"point_id":1,
+                        "storage_id":1}';
+        */
 
         $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
         // checks validity and decode input JSON
         $decoded_json = $this->Filter_unit->decode_Json($input_json);
 
         $point_id = filter_var($decoded_json['point_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
+        $storage_id = filter_var($decoded_json['storage_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
 
         if (is_null($point_id))
             throw new UFO_Except("incorrect Json value 'point_id' ",400);
 
+        if (is_null($storage_id))
+            throw new UFO_Except("incorrect Json value 'storage_id' ",400);
+
         // if all checks are successful we are call model method
-        $this->Model_Points->delete_point($point_id);
+        $this->Model_Points->delete_point($storage_id,$_SESSION['id'],$point_id);
         View::output_json(array('state'=>'success'));
     }
 
     /**
      * Output list of all delivery point`s on selected date
-     * Structure of Json_input{
+     * Structure of Json_input
+     *  int point_id
+     *  int storage_id
      *  int unix timestamp 'delivery_date'
-     * }
+     *
      * @api 'Server/Points/get_points_by_date'
      * @throws UFO_Except
      * @throws \Application\Exceptions\Model_Except
      */
     public function action_get_points_by_date(){
         //Example of Json_input
-        //$input_json = '{"delivery_date":145855604800}';
+        /*
+        $input_json = '{"delivery_date":1458556048,
+                        "storage_id":1
+        }';
+        */
 
         $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
 
@@ -173,20 +210,28 @@ class Controller_Points extends Controller{
 
         $delivery_date = filter_var($decoded_json['delivery_date'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
 
+        $storage_id = filter_var($decoded_json['storage_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
+
         if (is_null($delivery_date) || !$this->Filter_unit->date_check($delivery_date))
             throw new UFO_Except("incorrect Json value 'delivery_date' ",400);
 
+        if (is_null($storage_id))
+            throw new UFO_Except("incorrect Json value 'storage_id' ",400);
+
         // if all checks are successful we are call model method
-        $result =$this->Model_Points->get_points_by_date($delivery_date);
+        $result =$this->Model_Points->get_points_by_date($storage_id,$_SESSION['id'],$delivery_date);
         $result['state']='success';
         View::output_json($result);
     }
 
     /**
      * Output info about delivery point
-     * structure of Json_input {int point_id}
+     * structure of Json_input
+     * int point_id
+     * int storage_id
      * structure of output 'point_info'{
      *  float 'total_cost'
+     *  bool 'cashless'
      *  string 'identifier_order'
      *  string 'street'
      *  string 'house'
@@ -208,7 +253,11 @@ class Controller_Points extends Controller{
      */
     public function action_get_info_about_point(){
         // Example of Json_input
-        //$input_json = '{"point_id":"1"}';
+        /*
+        $input_json = '{"point_id":1,
+                        "storage_id":1
+        }';
+        */
 
         $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
         // checks validity and decode input JSON
@@ -216,11 +265,16 @@ class Controller_Points extends Controller{
 
         $point_id = filter_var($decoded_json['point_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
 
+        $storage_id = filter_var($decoded_json['storage_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
+
         if (is_null($point_id))
             throw new UFO_Except("incorrect Json value 'point_id' ",400);
 
+        if (is_null($storage_id))
+            throw new UFO_Except("incorrect Json value 'storage_id' ",400);
+
         // if all checks are successful we are call model method
-        $point_info =$this->Model_Points->get_info_about_point($point_id);
+        $point_info =$this->Model_Points->get_info_about_point($storage_id,$_SESSION['id'],$point_id);
         $result['point_info']=$point_info;
         $result['state']='success';
         View::output_json($result);

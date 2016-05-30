@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet/less" type="text/css" href="css/main.less">
+    <link rel="stylesheet/less" type="text/css" href="css/auth.less">
+    <link rel="stylesheet" type="text/css" href="css/fonts.css">
+    <title>Доставка</title>
+</head>
+<body>
+	<json style="display: none"></json>
+	<form id="auth-form" autocomplete="off" onsubmit="authTry(); return false;">
+		<p id="auth-header">Авторизация</p>
+		<div id="auth-enter">
+			<input required name="login" autocomplete="off" type="text" placeholder="Имя пользователя">
+			<input required name="password" autocomplete="off" type="password" placeholder="Пароль">
+		</div>
+		<p id="auth-message">Ошибка авторизации</p><button type="submit" id="auth-submit">Авторизироваться</button>
+	</form>
+	<script type="text/javascript" src="js/less.min.js"></script>
+	<script type="text/javascript" src="js/auth.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+</body>
+</html>

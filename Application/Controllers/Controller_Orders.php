@@ -12,7 +12,7 @@ use Application\Core\Controller;
 use Application\Core\View;
 use Application\Exceptions\UFO_Except;
 use Application\Models\Model_Orders;
-use Application\Units\Filter_Unit;
+use Application\Units\Authentication;
 
 /**
  * Class Controller_orders Controls actions related with orders
@@ -26,19 +26,16 @@ class Controller_Orders extends Controller{
      */
     private $Model_orders;
 
-    /**
-     * Unit that provides a filtering functions
-     * @var Filter_Unit
-     */
-    private $Filter_unit;
 
     /**
      * create an object of Model_Orders and insert it to $Model_orders
      * Controller_Orders constructor.
+     * Access level - 1 registered user
      */
     public function __construct(){
+        parent::__construct();
+        $this->Authentication->access_check(1);
         $this->Model_orders = new Model_Orders();
-        $this->Filter_unit = new Filter_Unit();
     }
 
     /**
@@ -71,7 +68,7 @@ class Controller_Orders extends Controller{
 
         $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
 
-        $order_id =$this->Model_orders->add_order($valid_arr['point_id'],$valid_arr['description'],$valid_arr['cost']);
+        $order_id =$this->Model_orders->add_order($valid_arr['point_id'],$valid_arr['description'],$valid_arr['cost'],$_SESSION['id']);
 
         $output['order_id'] = $order_id;
         $output['state']='success';
@@ -98,7 +95,7 @@ class Controller_Orders extends Controller{
         if (is_null($order_id))
             throw new UFO_Except("incorrect Json value 'order_id' ",400);
         // if all checks are successful we are call model method
-        $this->Model_orders->delete_order($order_id);
+        $this->Model_orders->delete_order($order_id,$_SESSION['id']);
         View::output_json(array('state'=>'success'));
 
     }
@@ -132,7 +129,7 @@ class Controller_Orders extends Controller{
         $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
 
         // if all checks are successful we are call model method
-        $this->Model_orders->update_order($valid_arr['order_id'],$valid_arr['description'],$valid_arr['cost']);
+        $this->Model_orders->update_order($valid_arr['order_id'],$valid_arr['description'],$valid_arr['cost'],$_SESSION['id']);
         View::output_json(array('state'=>'success'));
     }
 
@@ -158,7 +155,7 @@ class Controller_Orders extends Controller{
         if (is_null($point_id))
             throw new UFO_Except("incorrect Json value 'point_id' ",400);
         // if all checks are successful we are call model method
-        $orders =$this->Model_orders->get_list_orders_by_point_id($point_id);
+        $orders =$this->Model_orders->get_list_orders_by_point_id($point_id,$_SESSION['id']);
         $output['orders'] = $orders;
         $output['state'] = 'success';
         View::output_json($output);
