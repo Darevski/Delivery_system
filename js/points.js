@@ -1,5 +1,7 @@
 var Points = [];
+var StoragesArray = [];
 var myMap;
+var selectedStorage = 0;
 
 /** Загружает карту, по загрузке выполняет функцию DoOnLoad
 *
@@ -19,7 +21,7 @@ ymaps.ready(function () {
 function DoOnLoad()
 {
 	try {
-		function setDateNload(dateToSet) {
+		function setDateNload(dateToSet, storages) {
 			try {
 				var _t = new Date(dateToSet * 1000);
 				var date_input = _t.getFullYear() + "-";
@@ -28,6 +30,16 @@ function DoOnLoad()
 				(_t.getDate() < 10) && (date_input += "0");
 				date_input += _t.getDate();
 				document.querySelector('#store-date > input[type="date"]').value = date_input;
+				var storageContainer = document.querySelector("#store-choose > select");
+				storages.storages.forEach(function (item, i) {
+					StoragesArray.push(item);
+					var elem = document.createElement("option");
+					elem.setAttribute("value", i);
+					elem.innerHTML = item.name;
+					storageContainer.appendChild(elem);
+				});
+				storageContainer.selectedIndex = 0;
+				selectedStorage = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id;
 				delVar("pending");
 				loadPoints();
 				reCalc();
@@ -43,6 +55,7 @@ function DoOnLoad()
 		reCalc();
 		document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
 		document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
+		document.querySelector('#store-choose > select').onchange = function () { selectedStorage = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id; loadPoints(); };
 		document.querySelector('#calculate').onclick = calcRoutes;
 		if (getVar("onDate"))
 			setDateNload(getVar("onDate"));
@@ -52,7 +65,19 @@ function DoOnLoad()
 				try {
 					var answer = JSON.parse(Response);
 					if (answer.data) {
-						setDateNload(answer.data);
+						var storageReq = new Request("/Storages/get_storages");
+						storageReq.callback = function (storageResponse) {
+							try {
+								var storageAnswer = JSON.parse(storageResponse);
+								if (storageAnswer.data.state === "success") {
+									setDateNload(answer.data, storageAnswer.data);
+								}
+								else
+									new Dialog(storageAnswer.data.message);
+							}
+							catch (ex) { console.error(ex); new Dialog(ex.message); }
+						}
+						storageReq.do();
 					}
 					else
 						new Dialog("Ошибка ответа сервера");
@@ -298,7 +323,7 @@ Point.prototype = {
 				var _this = this;
 				var _temp = document.createElement("div");
 				_temp.setAttribute("id", "edit-order");
-				_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" min="' + mintime + '" max="' + maxtime + '" step="900" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to" min="' + mintime + '" max="' + maxtime + '" step="900"></div><div id="edit-order-phone"><p style=" width: 130px; ">Дополнительно: </p><input placeholder="телефон" type="tel" style=" width: 170px; "><input placeholder="примечание" type="text" style=" width: 420px; margin-left: 20px; "></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
+				_temp.innerHTML = '<div id="edit-order-window"><p id="order-number"></p><input type="text" placeholder="Улица, проезд, проспект" id="edit-order-address-street"><input type="text" placeholder="дом" id="edit-order-address-house"><input type="text" placeholder="под." id="edit-order-address-entry"><input type="text" placeholder="этаж" id="edit-order-address-floor"><input type="text" placeholder="кв." id="edit-order-address-flat"><div id="edit-order-time"><p>Желаемое время доставки:</p><p style="width: 50px; text-align: center;">с</p><input type="time" min="' + mintime + '" max="' + maxtime + '" step="900" class="time-from"><p style="width: 60px; text-align: center;">по</p><input type="time" class="time-to" min="' + mintime + '" max="' + maxtime + '" step="900"></div><div id="edit-order-phone"><p style=" width: 130px; ">Дополнительно: </p><input placeholder="телефон" type="tel" style=" width: 170px; "><input placeholder="примечание" type="text" style=" width: 380px; margin-left: 20px; margin-right: 15px;"><div class="cashless" id="edit-order-cashless"><p></p><p></p></div></div><div id="edit-order-items"></div><div class="add-floating-button"></div><div class="button-save"></div><div class="button-cancel"></div></div>';
 				_temp.getElementsByTagName("p")[0].innerHTML = this.uniq;
 				(this.address.street) && (_temp.getElementsByTagName("input")[0].value = this.address.street);
 				(this.address.house)  && (_temp.getElementsByTagName("input")[1].value = this.address.house);
@@ -346,7 +371,7 @@ Point.prototype = {
 							}
 							catch (ex) { console.error(ex); new Dialog(ex.message); }
 						}
-						_temp.getElementsByTagName("div")[3].appendChild(el);
+						_temp.getElementsByTagName("div")[4].appendChild(el);
 					}
 				_temp.getElementsByClassName("add-floating-button")[0].onclick = function () {
 					try {
@@ -371,7 +396,7 @@ Point.prototype = {
 										el.setAttribute("class", "item");
 										el.innerHTML = '<input placeholder="описание товара" type="text"><input placeholder="стоимость товара" type="text"><div class="button-delete"></div>';
 										el.children[2].onclick = function () {
-										var body = { order_id: item.order_id }
+											var body = { order_id: item.order_id }
 											var req = new Request("/Orders/delete_order", body);
 											var __this = this;
 											var _onclick = this.onclick;
@@ -400,6 +425,19 @@ Point.prototype = {
 							catch (ex) { console.error(ex); new Dialog(ex.message); }
 						}
 						req.do();
+					}
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
+				}
+				_temp.getElementsByClassName("cashless")[0].onclick = function () {
+					try {
+						var elem = document.querySelector("#edit-order-cashless");
+						if (elem != void(0))
+							{
+								if (elem.getAttribute("status") != void(0)) 
+									elem.removeAttribute("status");
+								else
+									elem.setAttribute("status", "cashless");
+							}
 					}
 					catch (ex) { console.error(ex); new Dialog(ex.message); }
 				}
@@ -493,6 +531,8 @@ Point.prototype = {
                         var _t = new Date(document.querySelector('#store-date > input[type="date"]').value);
                         body.delivery_date = parseInt(_t.getTime() / 1000);
                         body.note = (document.querySelector('#edit-order-phone > input[type="text"]').value) ? document.querySelector('#edit-order-phone > input[type="text"]').value : "Примечания отсутствуют";
+                        body.cashless = document.querySelector('#edit-order-cashless').getAttribute("status") === "cashless";
+						body.storage_id = selectedStorage;
                         var req = new Request("/Points/fill_point", body);
                         req.callback = function (Response) {
                             try {
@@ -548,8 +588,10 @@ Point.prototype = {
 			if (!getVar("pending")) {
 				function PointDelete(_this) {
 					try {
-						var t = {};
-						t.point_id = _this.id;
+						var t = {
+							point_id: _this.id,
+							storage_id: selectedStorage
+						};
 						var req = new Request("/Points/delete_point", t);
 						req.callback = function (Response) {
 							try {
@@ -746,7 +788,8 @@ function PreparePoint()
 		if (!getVar("pending"))
 			{
 				setVar("pending", true);
-				var query = new Request("/Points/add_empty_point");
+				var body = { storage_id: selectedStorage }
+				var query = new Request("/Points/add_empty_point", body);
 				query.callback = function (Response) {
 					try {
 						var ans = JSON.parse(Response);
@@ -770,7 +813,7 @@ function PreparePoint()
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
 
-/** Загружает точки на дату, указанную в datepicker
+/** Загружает точки на дату и склад, указанные в header
 *
 */
 function loadPoints()
@@ -789,7 +832,10 @@ function loadPoints()
 						clearInterval(removeEnded);
 						setVar("pending", true);
 						var day = new Date(dateBlock.value);
-						var body = { delivery_date: day.getTime() / 1000 }
+						var body = {
+							delivery_date: day.getTime() / 1000,
+							storage_id: StoragesArray[parseInt(document.querySelector("#store-choose > select").value)].id
+						}
 						var req = new Request("Points/get_points_by_date", body);
 						req.callback = function (Response) {
 							try {

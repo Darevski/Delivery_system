@@ -14,10 +14,6 @@ body
 }
 input, select { outline: none; 	display: inline-block; vertical-align: top; cursor: pointer; }
 input:focus, select:focus { outline: none; }
-input[type="date"]:focus
-{
-	outline: 0;
-}
 input[type="date"]::-webkit-calendar-picker-indicator
 {
     font-size: 16px;
@@ -186,6 +182,9 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	background-color: @color-block;
 	text-align: justify;
 	text-align-last: left;
+    -webkit-user-select: initial;
+    -moz-user-select: initial;
+    -ms-user-select: initial;
 }
 .ex-button:hover
 {

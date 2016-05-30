@@ -33,24 +33,27 @@
 	background-color: @color-body;
 	box-shadow: inset 0px 0 15px -5px #000;
 }
-#sets #header #store-date input:disabled
+#store-choose select:disabled,
+#store-date input:disabled
 {
 	color: #897579;
 	background-color: @color-block;
 }
-#sets #header #store-date input
+#store-choose select,
+#store-date input
 {
 	background-color: @color-block;
 	border: 0;
-	width: 145px;
+	width: 135px;
 	padding-left: 15px;
 	margin-left: 10px;
 	line-height: 40px;
 }
-#sets #header #store-date
+#store-date,
+#store-choose
 {
-	width: 250px;
-	margin-left: 150px;
+	width: 200px;
+	margin-left: 50px;
 }
 #sets #header *
 {
@@ -409,6 +412,29 @@
 	z-index: 3;
 	top: ~"calc(50% + 160px)";
 	left: ~"calc(50% - 25px)";
+}
+#edit-order-cashless {
+	display: inline-block;
+	vertical-align: top;
+	width: 25px;
+	height: 25px;
+	overflow: hidden;
+}
+#edit-order-cashless[status="cashless"] > p:first-child {
+	margin-top: -25px;
+}
+#edit-order-cashless > p:nth-child(2) {
+	background-image: url("icons/credit-card.png");
+}
+#edit-order-cashless > p {
+	transition: 0.2s;
+	width: 25px;
+	height: 25px;
+	display: block;
+	background-image: url("icons/cash.png");
+	background-size: 25px;
+	background-repeat: no-repeat;
+	background-position: center center;
 }
 ymaps iframe
 {
