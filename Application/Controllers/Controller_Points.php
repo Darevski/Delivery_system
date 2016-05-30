@@ -228,7 +228,6 @@ class Controller_Points extends Controller{
      * Output info about delivery point
      * structure of Json_input
      * int point_id
-     * int storage_id
      * structure of output 'point_info'{
      *  float 'total_cost'
      *  bool 'cashless'
@@ -254,9 +253,7 @@ class Controller_Points extends Controller{
     public function action_get_info_about_point(){
         // Example of Json_input
         /*
-        $input_json = '{"point_id":1,
-                        "storage_id":1
-        }';
+            $input_json = '{"point_id":1 }';
         */
 
         $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
@@ -265,16 +262,13 @@ class Controller_Points extends Controller{
 
         $point_id = filter_var($decoded_json['point_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
 
-        $storage_id = filter_var($decoded_json['storage_id'],FILTER_VALIDATE_INT,FILTER_NULL_ON_FAILURE);
 
         if (is_null($point_id))
             throw new UFO_Except("incorrect Json value 'point_id' ",400);
 
-        if (is_null($storage_id))
-            throw new UFO_Except("incorrect Json value 'storage_id' ",400);
 
         // if all checks are successful we are call model method
-        $point_info =$this->Model_Points->get_info_about_point($storage_id,$_SESSION['id'],$point_id);
+        $point_info =$this->Model_Points->get_info_about_point($point_id,$_SESSION['id']);
         $result['point_info']=$point_info;
         $result['state']='success';
         View::output_json($result);

@@ -217,18 +217,14 @@ class Model_Delivery_Points extends Model{
      *  string 'delivery_date'
      *  string 'order_date'
      * }
-     * @param integer $storage_id
      * @param integer $company_id
      * @param $point_id
      * @return mixed
      * @throws Model_Except
      */
-    public function get_info_about_point($storage_id,$company_id,$point_id){
+    public function get_info_about_point($point_id,$company_id){
 
-        if (!$this->Model_storage->isset_storge($storage_id,$company_id))
-            throw new Model_Except("Выбранного склада не существует, обновите страницу");
-
-        if (!$this->isset_point($point_id,$storage_id))
+        if (!$this->isset_point_for_user($point_id,$company_id))
             throw new Model_Except("Точки доставки не существует");
 
         $query = "SELECT total_cost,identifier_order,street,house,cashless,note,entry,floor,flat,latitude,longitude,
@@ -256,5 +252,16 @@ class Model_Delivery_Points extends Model{
         $result =  $this->database->query($query,$point_id,$storage_id);
         $count = $this->database->numRows($result);
         return ($count > 0) ? true : false;
+    }
+
+    /**
+     * Check`s access user to selected point
+     * @param $point_id
+     * @param $company_id
+     * @return array|FALSE
+     */
+    public function isset_point_for_user($point_id,$company_id){
+        $query = "Select EXISTS (SELECT 1 FROM Storages WHERE id=(SELECT storage_id FROM Delivery_Points WHERE Point_ID=?i) AND company_id=?i)";
+        return $this->database->getRow($query,$point_id,$company_id);
     }
 }
