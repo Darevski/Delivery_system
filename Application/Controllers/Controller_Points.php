@@ -11,6 +11,7 @@ use Application\Core\Controller;
 use Application\Core\View;
 use Application\Exceptions\UFO_Except;
 use Application\Models\Model_Delivery_Points;
+use Application\Units\Long_Poll;
 
 /**
  * Class Controller_Points Controls actions related with delivery points
@@ -24,12 +25,19 @@ class Controller_Points extends Controller{
     private $Model_Points;
 
     /**
+     * Long Polling demon
+     * @var Long_Poll
+     */
+
+    private $Poll;
+    /**
      * create an object of Model_Delivery_Points
      * Controller_Points constructor.
      * Access level - 1 registered user
      */
     public function __construct(){
         parent::__construct();
+        $this->Poll = new Long_Poll();
         $this->Authentication->access_check(1);
         $this->Model_Points = new Model_Delivery_Points();
     }
@@ -46,10 +54,10 @@ class Controller_Points extends Controller{
     public function action_add_empty_point(){
 
         // Example Post Request
-        /*
+
         $input_json = '{"storage_id":1 }';
-        */
-        $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+
+        //$input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
 
         // checks validity and decode input JSON
         $decoded_json = $this->Filter_unit->decode_Json($input_json);
@@ -62,6 +70,7 @@ class Controller_Points extends Controller{
         $point_info = $this->Model_Points->add_empty_point($storage_id,$_SESSION['id']);
         $output = $point_info;
         $output['state']='success';
+
         View::output_json($output);
     }
 
@@ -148,6 +157,9 @@ class Controller_Points extends Controller{
                                         $valid_arr['phone'],
                                         $valid_arr['delivery_date'],
                                         $valid_arr['cashless']);
+
+        $this->Poll->push('points_edit',$valid_arr['point_id']);
+
         View::output_json(array('state'=>'success'));
     }
 
@@ -182,6 +194,8 @@ class Controller_Points extends Controller{
 
         // if all checks are successful we are call model method
         $this->Model_Points->delete_point($storage_id,$_SESSION['id'],$point_id);
+
+        $this->Poll->push('points_delete');
         View::output_json(array('state'=>'success'));
     }
 

@@ -36,7 +36,7 @@ class Model_Orders extends Model{
      */
     public function add_order($point_id,$description,$cost,$company_id){
         // using Delivery Points model for verify the existence of point
-        if (!$this->Model_points->isset_point($point_id,$company_id))
+        if (!$this->Model_points->isset_point_for_user($point_id,$company_id))
             throw new Model_Except("Точки доставки не существует");
         if ($cost <0)
             throw new Model_Except("Стоимость не может быть меньше 0");
@@ -77,7 +77,7 @@ class Model_Orders extends Model{
      * @throws Model_Except
      */
     public function delete_order($order_id,$company_id){
-        if($this->isset_order($order_id,$company_id))
+        if(!$this->isset_order($order_id,$company_id))
             throw  new Model_Except("Заказа с указанным id не существует");
 
         $delete_query = "DELETE FROM Orders WHERE Order_ID = ?i";
@@ -107,7 +107,6 @@ class Model_Orders extends Model{
      */
     public function isset_order($order_id,$company_id){
         $query = "SELECT EXISTS (SELECT * FROM Orders WHERE Point_ID in (SELECT Point_ID FROM Delivery_Points WHERE Storage_ID in (SELECT id FROM Storages WHERE company_id=?i)) and Order_ID = ?i)";
-        $result = $this->database->getRow($query,$company_id,$order_id);
-        return ($result == 1) ? true : false;
+        return $this->database->getOne($query,$company_id,$order_id);
     }
 }

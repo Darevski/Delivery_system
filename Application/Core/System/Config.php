@@ -31,6 +31,12 @@ class Config {
     }
 
     /**
+     * Long poll executing time
+     * @var
+     */
+    private $poll_time;
+
+    /**
      * @var array route Algorithm delay time
      */
     private $route_algoritm;
@@ -57,9 +63,10 @@ class Config {
     private function __construct(){
         $Config = parse_ini_file($_SERVER['DOCUMENT_ROOT'].'/Application/Config.ini',true);
         $this->database_config = $Config['Data_Base_config'];
-        $this->build = $Config['Build'];
+        $this->build = $Config['System'];
         $this->yandex_unit  = $Config['Yandex Unit'];
         $this->route_algoritm = $Config['Route Algorithm'];
+        $this->poll_time = (int) $Config['System']['Pull_Execution_time'];
     }
 
     /** cap for protection */
@@ -95,5 +102,13 @@ class Config {
      */
     public function get_route_algorithm(){
         return $this->route_algoritm;
+    }
+
+    /**
+     * return execution time for long poll
+     * @return mixed
+     */
+    public function get_poll_time(){
+        return $this->poll_time;
     }
 }

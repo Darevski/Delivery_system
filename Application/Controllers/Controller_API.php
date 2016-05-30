@@ -10,7 +10,8 @@ namespace Application\Controllers;
 
 use Application\Core\Controller;
 use Application\Core\View;
-
+use Application\Units\Authentication;
+use Application\Units\Long_Poll;
 /**
  * Class Controller_API
  * @package Application\Controllers
@@ -58,4 +59,24 @@ class Controller_API extends Controller{
         //Redirect to main page
         header("Location:/");
     }
+
+
+    /**
+     * @throws \Application\Exceptions\Auth_Except
+     */
+    public function action_Long_polling(){
+        // only logged users can use that future
+        $auth = new Authentication();
+        $auth->access_check(1);
+
+        $poll = new Long_Poll();
+
+        $poll->registerEvent('points_edit');
+        $poll->registerEvent('points_remove');
+        //$poll->registerEvent('points_add');
+        $result = $poll->listen();
+        
+        View::output_json($result);
+    }
+
 }
