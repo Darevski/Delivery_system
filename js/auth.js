@@ -13,7 +13,7 @@ function authTry() {
 				elems[0].setAttribute("status", "good");
 				elems[1].setAttribute("status", "good");
 				setTimeout(function () {
-					document.body.style.opacity = "";
+					document.getElementsByTagName("html")[0].style.opacity = "";
 					setTimeout(function () {
 						window.location="/";
 					}, 500);
@@ -37,7 +37,8 @@ function authTry() {
 	req.do();
 }
 window.onload = function () {
-	document.body.style.opacity = "1";
+	document.getElementsByTagName("html")[0].style.transition = "0.5s 0.3s";
+	document.getElementsByTagName("html")[0].style.opacity = "1";
 	document.getElementById("auth-enter").children[0].addEventListener("change", function () { this.removeAttribute("status"); });
 	document.getElementById("auth-enter").children[1].addEventListener("change", function () { this.removeAttribute("status"); });
 	if (document.getElementsByTagName("json")[0].innerHTML != "")

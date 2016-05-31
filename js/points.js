@@ -1,7 +1,7 @@
 var Points = [];
 var StoragesArray = [];
 var myMap;
-var selectedStorage = 0;
+var selectedStorage;
 
 /** Загружает карту, по загрузке выполняет функцию DoOnLoad
 *
@@ -21,7 +21,7 @@ ymaps.ready(function () {
 function DoOnLoad()
 {
 	try {
-		function setDateNload(dateToSet, storages) {
+		function setDateNload(dateToSet, storages, selectedStore) {
 			try {
 				var _t = new Date(dateToSet * 1000);
 				var date_input = _t.getFullYear() + "-";
@@ -38,55 +38,81 @@ function DoOnLoad()
 					elem.innerHTML = item.name;
 					storageContainer.appendChild(elem);
 				});
-				storageContainer.selectedIndex = 0;
+				(!selectedStore) && (selectedStore = 0);
+				storageContainer.selectedIndex = parseInt(selectedStore);
 				selectedStorage = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id;
 				delVar("pending");
+				delVar("onDate");
+				delVar("storage");
 				loadPoints();
 				reCalc();
 			}
 			catch (ex) { console.error(ex); new Dialog(ex.message); }
 		}
-		document.body.style.opacity = "1";
+		document.getElementsByTagName("html")[0].style.transition = "0.5s";
+		document.getElementsByTagName("html")[0].style.opacity = "1";
 		/* Меню */
 		var top_tabs = document.getElementById("tab-bar").children;
-		top_tabs[0].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { var date = new Date(document.querySelector('#store-date > input[type="date"]').value); setVar("onDate", date.getTime() / 1000); window.location.href = "/"; }, 600); }
-		top_tabs[1].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { var date = new Date(document.querySelector('#store-date > input[type="date"]').value); setVar("onDate", date.getTime() / 1000); window.location.href = "/Route"; }, 600); }
-		top_tabs[2].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/API/user_exit"; }, 600); }
+		top_tabs[0].onclick = function () {
+			document.getElementsByTagName("html")[0].style.opacity = "";
+			setTimeout(function () {
+				var date = new Date(document.querySelector('#store-date > input[type="date"]').value);
+				setVar("onDate", date.getTime() / 1000);
+				setVar("storage", document.querySelector('#store-choose > select').selectedIndex);
+				window.location.href = "/";
+			}, 600);
+		}
+		top_tabs[1].onclick = function () {
+			document.getElementsByTagName("html")[0].style.opacity = "";
+			setTimeout(function () {
+				var date = new Date(document.querySelector('#store-date > input[type="date"]').value);
+				setVar("onDate", date.getTime() / 1000);
+				setVar("storage", document.querySelector('#store-choose > select').selectedIndex);
+				window.location.href = "/Route";
+			}, 600);
+		}
+		top_tabs[2].onclick = function () {
+			document.getElementsByTagName("html")[0].style.opacity = "";
+			setTimeout(function () { window.location.href = "/API/user_exit"; }, 600);
+		}
 		reCalc();
 		document.querySelector('#footer > div.add-floating-button').onclick = PreparePoint;
 		document.querySelector('#store-date > input[type="date"]').onchange = loadPoints;
 		document.querySelector('#store-choose > select').onchange = function () { selectedStorage = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id; loadPoints(); };
 		document.querySelector('#calculate').onclick = calcRoutes;
-		if (getVar("onDate"))
-			setDateNload(getVar("onDate"));
-		else {
-			var req = new Request("/API/get_time");
-			req.callback = function (Response) {
-				try {
-					var answer = JSON.parse(Response);
-					if (answer.data) {
-						var storageReq = new Request("/Storages/get_storages");
-						storageReq.callback = function (storageResponse) {
+		
+		
+		
+		var storageReq = new Request("/Storages/get_storages");
+		storageReq.callback = function (storageResponse) {
+			try {
+				var storageAnswer = JSON.parse(storageResponse);
+				if (storageAnswer.data.state === "success") {
+					
+					if (getVar("onDate"))
+						setDateNload(getVar("onDate"), storageAnswer.data, getVar("storage"));
+					else {
+						var req = new Request("/API/get_time");
+						req.callback = function (Response) {
 							try {
-								var storageAnswer = JSON.parse(storageResponse);
-								if (storageAnswer.data.state === "success") {
-									setDateNload(answer.data, storageAnswer.data);
+								var answer = JSON.parse(Response);
+								if (answer.data) {
+									setDateNload(answer.data, storageAnswer.data, getVar("storage"));
 								}
 								else
-									new Dialog(storageAnswer.data.message);
+									new Dialog("Ошибка ответа сервера");
 							}
 							catch (ex) { console.error(ex); new Dialog(ex.message); }
 						}
-						storageReq.do();
+						req.do();
 					}
-					else
-						new Dialog("Ошибка ответа сервера");
 				}
-				catch (ex) { console.error(ex); new Dialog(ex.message); }
+				else
+					new Dialog(storageAnswer.data.message);
 			}
-			req.do();
+			catch (ex) { console.error(ex); new Dialog(ex.message); }
 		}
-		delVar("onDate");
+		storageReq.do();
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
@@ -906,7 +932,8 @@ function calcRoutes() {
 			setVar("pending", true);
 			var date = new Date(document.querySelector('#store-date > input[type="date"]').value);
 			var body = {
-				date: date.getTime() / 1000
+				date: date.getTime() / 1000,
+				storage_id: StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id
 			}
 			loader = new PreLoader();
 			loader.inprogress = function () {
@@ -928,6 +955,8 @@ function calcRoutes() {
 											for (var j = 0; j < Points.length+1; j++)
 												timeMatrix[i][j] = null;
 										}
+										var lat = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].Latitude;
+										var lon = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].Longitude;
 										if (Points.length > 1) {
 											Points.forEach(function (item, i) {
 												Points.forEach(function (item, j) {
@@ -938,9 +967,6 @@ function calcRoutes() {
 																counter--;
 																timeMatrix[i+1][j+1] = route.properties.getAll().RouterRouteMetaData.jamsTime;
 																if (counter == 0) {
-																	/* Устанавливаем координаты начальной точки (склада) TODO: получать из списка*/
-																	var lat = 53.9383;
-																	var lon = 27.5783;
 																	var counter1 = Points.length;
 																	var infoArray = [];
 																	Points.forEach(function (item, u) {
@@ -960,7 +986,8 @@ function calcRoutes() {
 																					var bodyCalc = {
 																						points: infoArray,
 																						timeMatrix: timeMatrix,
-																						date: date.getTime() / 1000
+																						date: date.getTime() / 1000,
+																						storage_id: StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id
 																					}
 																					var reqCalc = new Request("/Route/calculation", bodyCalc);
 																					reqCalc.callback = function (Response) {
@@ -968,7 +995,7 @@ function calcRoutes() {
 																							var answer = JSON.parse(Response);
 																							if (answer.data.state == "success")
 																								{
-																									new Dialog("Маршрут успешно построен", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", bodyCalc.date); window.location.href = "/Route"; }}]);
+																									new Dialog("Маршрут успешно построен", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", bodyCalc.date); setVar("storage", document.querySelector('#store-choose > select').selectedIndex); window.location.href = "/Route"; }}]);
 																								}
 																							else { new Dialog(answer.data.message); }
 																						}
@@ -995,8 +1022,6 @@ function calcRoutes() {
 										else {
 											// FIX IF 1 POINT ONLY
 											// TODO: реализовать способом, иным от копипаста
-																var lat = 53.9383;
-																var lon = 27.5783;
 																var counter1 = Points.length;
 																var infoArray = [];
 																Points.forEach(function (item, u) {
@@ -1016,7 +1041,8 @@ function calcRoutes() {
 																				var bodyCalc = {
 																					points: infoArray,
 																					timeMatrix: timeMatrix,
-																					date: date.getTime() / 1000
+																					date: date.getTime() / 1000,
+																					storage_id: StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id
 																				}
 																				var reqCalc = new Request("/Route/calculation", bodyCalc);
 																				reqCalc.callback = function (Response) {
@@ -1024,7 +1050,7 @@ function calcRoutes() {
 																						var answer = JSON.parse(Response);
 																						if (answer.data.state == "success")
 																							{
-																								new Dialog("Маршрут успешно построен", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", bodyCalc.date); window.location.href = "/Route"; }}]);
+																								new Dialog("Маршрут успешно построен", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", bodyCalc.date); setVar("storage", document.querySelector('#store-choose > select').selectedIndex); window.location.href = "/Route"; }}]);
 																							}
 																						else { new Dialog(answer.data.message); }
 																					}
@@ -1042,7 +1068,7 @@ function calcRoutes() {
 											
 										}
 									}
-								else { new Dialog("Маршрут уже существует", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", body.date); window.location.href = "/Route"; }}]); }
+								else { new Dialog("Маршрут уже существует", [{text: "Посмотреть маршрут", func: function () { setVar("onDate", body.date); setVar("storage", document.querySelector('#store-choose > select').selectedIndex); window.location.href = "/Route"; }}]); }
 							}
 						else {	new Dialog(answer.data.message); }
 					}
