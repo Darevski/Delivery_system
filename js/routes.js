@@ -71,9 +71,13 @@ function DoOnLoad()
 				window.location.href = "/Route";
 			}, 600);
 		}
-		top_tabs[2].onclick = function () {
+		top_tabs[3].onclick = function () {
 			document.getElementsByTagName("html")[0].style.opacity = "";
 			setTimeout(function () { window.location.href = "/API/user_exit"; }, 600);
+		}
+		top_tabs[2].onclick = function () {
+			document.getElementsByTagName("html")[0].style.opacity = "";
+			setTimeout(function () { window.location.href = "/Settings"; }, 600);
 		}
 		document.getElementById("routes-print").onclick = printRoutes;
 		document.querySelector('#store-date > input[type="date"]').onchange = loadOnDate;

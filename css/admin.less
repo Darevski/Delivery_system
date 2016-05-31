@@ -1,0 +1,150 @@
+@color-body: #F5F5F5;
+@color-main: #03a9f4;
+@color-block: #FFF;
+@color-main-shadow: rgba(0,0,0,0.4);
+@color-delimeter: rgba(160, 160, 160, 0.4);
+@color-text: #616161;
+@color-good: #c0ca33;
+@color-bad: #f4511e;
+@color-table-hover: #EEEEEE;
+
+#tab {
+	> * {
+		float: left;
+		height: 100%;
+	}
+	#menu {
+		background-color: @color-block;
+		width: 250px;
+		
+		p[selected] {
+			border-right: 2px solid @color-main;
+		}
+		p:hover {
+			background-color: @color-body;
+			color: #000;
+		}
+		p:first-child {
+			margin-top: 20px;
+		}
+		p {
+			transition: 0.3s;
+			cursor: pointer;
+			display: block;
+			width: 228px;
+			height: 40px;
+			line-height: 40px;
+			padding: 0 0 0 20px;
+			color: @color-text;
+			border-right: 2px solid transparent;
+		}
+	}
+	#wrapper {
+		width: ~"calc(100% - 250px)";
+		background-color: @color-body;
+		box-shadow: inset 0px 0 15px -5px #000;
+		overflow-x: hidden;
+		overflow-y: auto;
+		
+		.option {
+			min-height: 50px;
+			width: 80%;
+			margin: 50px 10% 0 10%;
+			padding-bottom: 20px;
+			background-color: @color-block;
+			box-shadow: 0px 0px 10px -1px @color-main-shadow;
+			position: relative;
+			overflow: hidden;
+			
+			> p:first-child {
+				height: 48px;
+				width: 98%;
+				margin: 0 1%;
+				display: block;
+				text-align: center;
+				text-transform: uppercase;
+				color: @color-text;
+				line-height: 50px;
+				border-bottom: 2px solid @color-delimeter;
+			}
+			.option-container {
+				padding: 10px;
+				margin: 20px 1% 0;
+				max-height: 70vh;
+				min-height: 100px;
+				width: ~"calc(98% - 20px)";
+				box-shadow: inset 0px 0 15px -5px #000;
+				background-color: @color-body;
+				overflow-y: auto;
+				
+				.option-storage {
+					margin: 15px 5%;
+					width: 90%;
+					background-color: @color-block;
+					height: 40px;
+					box-shadow: 0px 0px 10px -1px @color-main-shadow;
+					
+					p:nth-child(1) { width: 18%; padding-left: 2%; }
+					p:nth-child(2) { width: 30%; }
+					p:nth-child(3) { width: 30%; }
+					p {
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						float: left;
+						display: block;
+						height: 40px;
+						line-height: 40px;
+					}
+					div {
+						margin: 8px 10px 0 0;
+					}
+				}
+			}
+			.add-floating-button {
+				bottom: 5px;
+				left: ~"calc(50% - 25px)";
+			}
+		}
+	}
+}
+#storage-edit {
+	position: fixed;
+	width: 400px;
+	height: 280px;
+	background-color: @color-block;
+	top: ~"calc(50% - 240px)";
+	left: ~"calc(50% - 200px)";
+	box-shadow: 0px 0px 10px -1px @color-main-shadow;
+	
+	> input:nth-child(2),
+	> input:nth-child(3) {
+		width: 170px;
+		float: left;
+	}
+	> input:nth-child(3) {
+		width: 120px;
+		margin-left: 10px;
+	}
+	> input {
+		border: 0;
+		width: 340px;
+		margin: 20px;
+		height: 38px;
+		padding: 0 5px 0 15px;
+		line-height: 50px;
+		border-bottom: 2px solid @color-delimeter;
+	}
+	> div.button-cancel {
+		bottom: 10px;
+		right: 39px;
+		width: 24px;
+		position: absolute;
+	}
+	> div.button-save {
+		bottom: 10px;
+		right: 10px;
+		width: 24px;
+		position: absolute;
+	}
+}
