@@ -10,6 +10,7 @@ namespace Application\Models;
 
 
 use Application\Exceptions\Model_Except;
+use Application\Units\Authentication;
 use Dompdf\Dompdf;
 
 /**
@@ -63,6 +64,8 @@ class Model_Reports{
      * Load templates from files
      */
     public function __construct(){
+        $auth = new Authentication();
+        $auth->access_check(1);
         $this->html_base_template = file_get_contents('Application/Views/Skeletons/Route_Report.html');
         $this->html_list_points_row_template = file_get_contents('Application/Views/Skeletons/Route_List_Point_Row.html');
         $this->html_list_points_template = file_get_contents('Application/Views/Skeletons/Route_List_Points.html');
@@ -78,12 +81,12 @@ class Model_Reports{
      * Feature is in development
      * Don`t use it
      */
-    public function get_pdf_routeInfo($date){
+    public function get_pdf_routeInfo($date,$storage_id,$company_id){
         $format_date = date("Y-m-d",$date);
 
         $route_manager = new Model_Route();
 
-        $routes = $route_manager->get_route_by_date($date);
+        $routes = $route_manager->get_route_by_date($date,$storage_id,$company_id);
         // if there are no routes in database - stop generation
         if (count($routes) == 0)
             throw new Model_Except("Отсутствует маршрут");
@@ -96,14 +99,14 @@ class Model_Reports{
             $route_time = date('H:i',mktime(0,0,$route['total_time']));
             $points_count = count($route['points']);
             $html_route_header = $this->generate_route_header($route_number,$format_date,$route_time,$points_count);
-            $html_route_points = $this->generate_route_points($route);
+            $html_route_points = $this->generate_route_points($route,$company_id);
             $this->template_replace('{points_list}',"\n".$html_route_points."\n <hr>\n",$html_route_header);
 
             $html_route.= $html_route_header;
 
             $html_delivery_point = '';
             foreach($route['points'] as $point)
-                $html_delivery_point.=$this->generate_delivery_point($point['point_id'])."\n";
+                $html_delivery_point.=$this->generate_delivery_point($point['point_id'],$storage_id,$company_id)."\n";
 
             // if not last add page_break
             $html_route.= $html_delivery_point;
@@ -115,14 +118,14 @@ class Model_Reports{
 
         $pdf->loadHtml($result);
         $pdf->render();
-        $pdf->stream("route.pdf",array('Attachment'=>0));
+        $pdf->stream("route",array('Attachment'=>0));
     }
 
 
 
-    private function generate_delivery_point($point_id){
+    private function generate_delivery_point($point_id,$storage_id,$company_id){
         $point_template = $this->html_point_info_template;
-        $point_info = $this->model_Delivery_Points->get_info_about_point($point_id);
+        $point_info = $this->model_Delivery_Points->get_info_about_point($point_id,$company_id);
 
         $this->template_replace('{identifier}',$point_info['identifier_order'].' ('.$point_id.')',$point_template);
 
@@ -139,7 +142,7 @@ class Model_Reports{
         $this->template_replace('{time_end}',$point_info['time_end'],$point_template);
         $this->template_replace('{total_cost}',$point_info['total_cost'],$point_template);
 
-        $html_orders = $this->generate_orders($point_id);
+        $html_orders = $this->generate_orders($point_id,$company_id);
 
 
         $this->template_replace('{orders_list}',$html_orders,$point_template);
@@ -147,8 +150,8 @@ class Model_Reports{
         return $point_template;
     }
 
-    private function generate_orders($point_id){
-        $orders = $this->model_Orders->get_list_orders_by_point_id($point_id);
+    private function generate_orders($point_id,$company_id){
+        $orders = $this->model_Orders->get_list_orders_by_point_id($point_id,$company_id);
         $index = 0;
         $html_orders = '';
         foreach ($orders as $order){
@@ -172,7 +175,7 @@ class Model_Reports{
      * @return mixed|string html code
      * @throws Model_Except
      */
-    private function generate_route_points($route){
+    private function generate_route_points($route,$company_id){
         // copy templates
         $points_template = $this->html_list_points_template;
         $row_template = $this->html_list_points_row_template;
@@ -189,7 +192,7 @@ class Model_Reports{
             $row_index = ($count & 1) ? "even_row" : "odd_row";
 
             // get info about selected point
-            $point_info = $this->model_Delivery_Points->get_info_about_point($point['point_id']);
+            $point_info = $this->model_Delivery_Points->get_info_about_point($point['point_id'],$company_id);
 
             $flat = ($point_info['flat']) ? ' кв.'.$point_info['flat'] : '';
             $address = $point_info['street']." д.".$point_info['house']. $flat;
@@ -231,6 +234,7 @@ class Model_Reports{
         // Insert values into template
         $this->template_replace("{route_index}",$route_index,$route_info);
         /* TODO добавить название организации в config */
+        /* TODO добавить описание склада в вывод */
         $this->template_replace("{corporation}","ООО Курсач",$route_info);
         $this->template_replace("{points_count}",$points_count,$route_info);
         $this->template_replace("{route_time}",$route_time,$route_info);

@@ -46,6 +46,7 @@ class Controller_Route extends Controller
      *                      "points":[int point_id, int time_start , int time_end]}
      *                      "timeMatrix":[[float/null],[float/null].....]
      *                      "date": int unix timestamp
+     *                      "storage_id" : int
      * @api 'server\Route\calculation'
      * @throws \Application\Exceptions\UFO_Except
      * @throws \Application\Exceptions\Model_Except
@@ -71,7 +72,8 @@ class Controller_Route extends Controller
                        [null,1026.58,1113.47,1222.81,986.68,1583.84,null,732.52,1561.03],
                        [null,868.78,1423.27,1352.77,1375.28,1462.55,437.39,null,1902.22],
                        [null,1756.53,1169.13,1109.37,950.37,1644.08,1576.06,1823.72,null]],
-        "date":1459448664
+        "date":1459448664,
+        "storage_id":1
         }';
         */
 
@@ -82,7 +84,7 @@ class Controller_Route extends Controller
         $validate_points_map = array(
             'point_id' => array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
             'time_start' => array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
-            'time_end' => array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
+            'time_end' => array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE)
         );
 
         $points_arr = array();
@@ -91,7 +93,8 @@ class Controller_Route extends Controller
 
         $validate_map = array(
             'timeMatrix' => array('filter'=>FILTER_VALIDATE_FLOAT, 'flags'=>FILTER_REQUIRE_ARRAY | FILTER_NULL_ON_FAILURE),
-            'date' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE)
+            'date' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
+            'storage_id' => array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE)
         );
 
         $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
@@ -101,13 +104,13 @@ class Controller_Route extends Controller
             throw new UFO_Except("Incorrect date in Json",400);
 
 
-        $this->Model_Route->handling_route($points_arr,$valid_arr['timeMatrix'],$valid_arr['date']);
+        $this->Model_Route->handling_route($points_arr,$valid_arr['timeMatrix'],$valid_arr['date'],$valid_arr['storage_id'],$_SESSION['id']);
         View::output_json(array('state'=>'success'));
     }
 
     /**
      * Return Routes (if existing) on selected date
-     * Structure of Json_input{ "date": int unix timestamp }
+     * Structure of Json_input{ "date": int unix timestamp, int storage_id }
      * structure of output{ [
      *      points:[
      *          {
@@ -125,13 +128,15 @@ class Controller_Route extends Controller
      */
     public function action_get_routes(){
         // Example Post Request
-        //$input_json = '{"date":1459448664}';
+        //$input_json = '{"date":1459448664,
+        //               {"storage_id":1}';
 
         $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
         $decoded_json = $this->Filter_unit->decode_Json($input_json);
 
         $validate_map = array(
-            'date' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE)
+            'date' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
+            'storage_id' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE)
         );
 
         $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
@@ -139,7 +144,7 @@ class Controller_Route extends Controller
         if ($this->Filter_unit->date_check($valid_arr['date']) === false)
             throw new UFO_Except("Incorrect date in Json",400);
 
-        $routes = $this->Model_Route->get_route_by_date($valid_arr['date']);
+        $routes = $this->Model_Route->get_route_by_date($valid_arr['date'],$valid_arr['storage_id'],$_SESSION['id']);
         $output['routes'] = $routes;
         $output['state'] = 'success';
         View::output_json($output);
@@ -151,13 +156,14 @@ class Controller_Route extends Controller
      */
     public function action_get_pdf_routes(){
         // Example Post Request
-        $input_json = '{"date":'.time().'}';
+        //$input_json = '{"date":'.time().'}';
 
-        //$input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+        $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
         $decoded_json = $this->Filter_unit->decode_Json($input_json);
 
         $validate_map = array(
-            'date' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE)
+            'date' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE),
+            'storage_id' =>array('filter'=>FILTER_VALIDATE_INT, 'flags'=>FILTER_NULL_ON_FAILURE)
         );
 
         $valid_arr = $this->Filter_unit->filter_array($decoded_json,$validate_map);
@@ -166,7 +172,7 @@ class Controller_Route extends Controller
             throw new UFO_Except("Incorrect date in Json",400);
 
         $report_manager = new Model_Reports();
-        $report_manager->get_pdf_routeInfo($valid_arr['date']);
+        $report_manager->get_pdf_routeInfo($valid_arr['date'],$valid_arr['storage_id'],$_SESSION['id']);
         //View::output_json($result);
     }
 

@@ -11,6 +11,7 @@ namespace Application\Models;
 use Application\Core\Model;
 use Application\Core\System\Config;
 use Application\Exceptions\Model_Except;
+use Application\Units\Authentication;
 use Application\Units\FPDF;
 
 /**
@@ -19,6 +20,7 @@ use Application\Units\FPDF;
  */
 class Model_Route extends Model{
 
+    private $Model_storage;
     /**
      * the start time of delivery
      * @var int
@@ -39,12 +41,16 @@ class Model_Route extends Model{
      */
     public function __construct(){
         parent::__construct();
+        $auth = new Authentication();
+        $auth->access_check(1);
+
         // Конвертация Времени указанного в конфиге в секунды
         $config = Config::get_instance()->get_route_algorithm();
         list($hours, $min, $sec) = explode(':', $config['time_for_delivery']);
         $this->time_for_delivery = ($hours * 3600 ) + ($min * 60 ) + $sec;
         list($hours, $min, $sec) = explode(':', $config['time_start_delivery']);
         $this->time_start_delivery = ($hours * 3600 ) + ($min * 60 ) + $sec;
+        $this->Model_storage = new Model_Storage();
     }
 
 
@@ -60,21 +66,26 @@ class Model_Route extends Model{
      * @param $points array {[int point_id, int time_start , int time_end],[]....}
      * @param $timeMatrix [[int/null],[int/null].....]
      * @param $date int unix timestamp
+     * @param $storage_id
+     * @param $company_id
      * @throws Model_Except
      * @return mixed
      */
-    public function handling_route($points,$timeMatrix,$date){
+    public function handling_route($points,$timeMatrix,$date,$storage_id,$company_id){
         $this->_timeMatrix = $timeMatrix;
+        if (!$this->Model_storage->isset_storge($storage_id,$company_id))
+            throw new Model_Except("Выбранного склада не существует");
+
         // Check on existing routes
         // If there is no routes then calculate new route
-        if (!$this->checks_existence_route($date)) {
+        if (!$this->checks_existence_route($date,$storage_id)) {
             if (count($points) <= 0)
                 throw new Model_Except("Для постороения маршрута необходима хотя бы 1 точка");
 
             $model_points = new Model_Delivery_Points();
             //check exciting points in Database
             foreach ($points as $value)
-                if (!$model_points->isset_point($value['point_id']))
+                if (!$model_points->isset_point($value['point_id'],$storage_id))
                     throw new Model_Except("Одной из выбранных точек не существует в БД");
             // Get paths by algorithm
             $ways = $this->calculate_route($points);
@@ -89,7 +100,7 @@ class Model_Route extends Model{
                         $time_to_first_point = $timeMatrix[0][$dot['index_point']+1];
 
                     $first_point = false;
-                    $point_info = $model_points->get_info_about_point($points[$dot['index_point']]['point_id']);
+                    $point_info = $model_points->get_info_about_point($points[$dot['index_point']]['point_id'],$company_id);
 
                     $point['point_id'] = $points[$dot['index_point']]['point_id'];
 
@@ -117,13 +128,15 @@ class Model_Route extends Model{
             unset($ways, $route, $point, $point_info, $value, $way, $dot);
 
             // save calculated routes into database
-            $this->save_route($tracks, $date);
+            $this->save_route($tracks, $date,$storage_id);
         }
     }
 
     /**
      * get routes by selected date
      * @param int $date unix timestamp
+     * @param int $storage_id number in database
+     * @param int $company_id uniq user id in database
      * @return array mixed { [
      *      points:[
      *          {
@@ -135,11 +148,15 @@ class Model_Route extends Model{
      *              float time
      *          }
      *     float total_time] ] }
+     * @throws Model_Except
      */
-    public function get_route_by_date($date){
-        $query = "SELECT routes FROM Routes WHERE calculating_date=?s";
+    public function get_route_by_date($date,$storage_id,$company_id){
+        if (!$this->Model_storage->isset_storge($storage_id,$company_id))
+            throw new Model_Except('Склада не существует');
+
+        $query = "SELECT routes FROM Routes WHERE calculating_date=?s and Storage_ID=?i";
         $date = date('Ymd',$date);
-        $routes = unserialize(base64_decode($this->database->getRow($query,$date)['routes']));
+        $routes = unserialize(base64_decode($this->database->getRow($query,$date,$storage_id)['routes']));
         if ($routes == false)
             $routes = array();
         return $routes;
@@ -254,21 +271,21 @@ class Model_Route extends Model{
      * @param $data
      * @param $date
      */
-    private function save_route($data,$date){
-        $query = "INSERT INTO Routes (calculating_date,routes) VALUES (?s,?s)";
+    private function save_route($data,$date,$storage_id){
+        $query = "INSERT INTO Routes (calculating_date,routes,Storage_ID) VALUES (?s,?s,?i)";
         $date = date('Ymd',$date);
         $serialized_data = base64_encode(serialize($data));
-        $this->database->query($query,$date,$serialized_data);
+        $this->database->query($query,$date,$serialized_data,$storage_id);
     }
 
     /** Checks that routes in selected day is existing
      * @param $date
      * @return bool
      */
-    private function checks_existence_route($date){
-        $query = "SELECT 1 FROM Routes WHERE calculating_date=?s LIMIT 1";
+    private function checks_existence_route($date,$storage_id){
+        $query = "SELECT 1 FROM Routes WHERE calculating_date=?s and Storage_ID=?i LIMIT 1";
         $date = date('Ymd',$date);
-        $result = $this->database->query($query,$date);
+        $result = $this->database->query($query,$date,$storage_id);
         $count = $this->database->numRows($result);
         return ($count > 0) ? true : false;
     }
