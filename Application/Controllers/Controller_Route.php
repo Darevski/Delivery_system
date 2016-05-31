@@ -158,7 +158,7 @@ class Controller_Route extends Controller
         // Example Post Request
         //$input_json = '{"date":'.time().'}';
 
-        $input_json = filter_input(INPUT_POST,'Json_input',FILTER_DEFAULT);
+        $input_json = filter_input(INPUT_GET,'Json_input',FILTER_DEFAULT);
         $decoded_json = $this->Filter_unit->decode_Json($input_json);
 
         $validate_map = array(
