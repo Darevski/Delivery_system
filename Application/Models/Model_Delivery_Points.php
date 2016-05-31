@@ -124,8 +124,8 @@ class Model_Delivery_Points extends Model{
             throw new Model_Except("Обновляемой точки доставки не существует");
         // relevance date check
         /* FIXME: Проблема с клиентским временем  TEST IT*/
-        if (mktime(0,0,0) > $delivery_date)
-            throw new Model_Except("Дата заказа не может быть меньше текущей");
+        //if (mktime(0,0,0) > $delivery_date)
+          //  throw new Model_Except("Дата заказа не может быть меньше текущей");
         $delivery_date = date('Y-m-d',$delivery_date);
         //convert string time to "H:i:s"
         $time_start = date('H:i:s',strtotime($time_start));
@@ -262,6 +262,6 @@ class Model_Delivery_Points extends Model{
      */
     public function isset_point_for_user($point_id,$company_id){
         $query = "Select EXISTS (SELECT 1 FROM Storages WHERE id=(SELECT storage_id FROM Delivery_Points WHERE Point_ID=?i) AND company_id=?i)";
-        return $this->database->getRow($query,$point_id,$company_id);
+        return $this->database->getOne($query,$point_id,$company_id);
     }
 }

@@ -7,17 +7,20 @@
 @color-bad: #f4511e;
 @color-table-hover: #EEEEEE;
 
+html {
+	font-family: 'Roboto', sans-serif;
+	font-size: 16px;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	transition: none;
+}
 body
 {
-	opacity: 0;
 	transition: 0.5s;
 }
 input, select { outline: none; 	display: inline-block; vertical-align: top; cursor: pointer; }
 input:focus, select:focus { outline: none; }
-input[type="date"]:focus
-{
-	outline: 0;
-}
 input[type="date"]::-webkit-calendar-picker-indicator
 {
     font-size: 16px;
@@ -186,6 +189,9 @@ input[type="date"]::-webkit-clear-button, input[type="date"]::-webkit-inner-spin
 	background-color: @color-block;
 	text-align: justify;
 	text-align-last: left;
+    -webkit-user-select: initial;
+    -moz-user-select: initial;
+    -ms-user-select: initial;
 }
 .ex-button:hover
 {
