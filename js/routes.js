@@ -330,36 +330,66 @@ function printRoutes() {
 			date: temp.getTime() / 1000,
 			storage_id: StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id
 		}
-		var req = new Request("/Route/get_pdf_routes", body);
-		req.callback = function (Response) {
+		var afterLoad = function (Response) {
 			try {
-				var ans = JSON.parse(Response);
-				if (ans.data.message == void(0)) {
-					var xhr = new XMLHttpRequest();
-					xhr.open('GET', "/Route/get_pdf_routes", true);
-					xhr.responseType = 'blob';
-					var timeout = setTimeout(function() {
-						new Dialog("Сервер не отвечает");
-						xhr.abort();
-					}, 5000);
-					xhr.onreadystatechange = function() {
-						if(xhr.readyState == 2) clearTimeout(timeout);
-						if(xhr.readyState == 4) {
-							if(xhr.status == 200) {
-								console.log(xhr.response);
-							} else {
-								new Dialog(xhr.responseText);
-							}
-						}
-					}
-					xhr.send(body);
-				}
-				else
+				if (Response.substring(0,4) != "%PDF") {
+					var ans = JSON.parse(Response);
 					new Dialog(ans.data.message);
+				}
+				else {
+					loader.purge();
+					document.getElementsByTagName("html")[0].style.opacity = "";
+					setTimeout(function () {
+						window.location = "/Route/get_pdf_routes?Json_input=" + JSON.stringify(body);
+					}, 500);
+				}
+
 			}
 			catch (ex) { console.error(ex); new Dialog(ex.message); }
 		}
-		req.do();
+		
+		var xhr = new XMLHttpRequest();
+		var already_processed = false;
+		xhr.open("GET", "/Route/get_pdf_routes?Json_input=" + JSON.stringify(body), true);
+		xhr.onreadystatechange = function()
+		{
+			try {
+				if (xhr.readyState == 4)
+					if (xhr.status == 200)
+					{
+						var json_response = document.createElement("html");
+						json_response.innerHTML = xhr.responseText;
+						var answer = json_response.getElementsByTagName("json")[0];
+						if (answer != void(0))
+							afterLoad(answer.innerHTML);
+						else
+							afterLoad(xhr.responseText);
+					}
+					else
+					{
+						if (!already_processed)
+						   {
+								var json_response = document.createElement("html");
+								json_response.innerHTML = xhr.responseText;
+								var answer = json_response.getElementsByTagName("json")[0];
+								already_processed = true;
+
+								if (answer != void(0))
+									afterLoad(answer.innerHTML);
+								else
+									{
+										var ans = {};
+										ans.data.state = "fail";
+										ans.data.message = xhr.responseText;
+										console.error = xhr.response;
+										afterLoad(JSON.stringify(ans));
+									}
+						   }
+					}
+			}
+			catch (ex) { console.error(ex); new Dialog(ex.message); }
+		}
+		xhr.send();
 	}
 	loader.create();
 }
