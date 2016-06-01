@@ -92,23 +92,32 @@ function DoOnLoad()
 			try {
 				var storageAnswer = JSON.parse(storageResponse);
 				if (storageAnswer.data.state === "success") {
-					
-					if (getVar("onDate"))
-						setDateNload(getVar("onDate"), storageAnswer.data, getVar("storage"));
+					if (storageAnswer.data.storages.length == 0) {
+						new Dialog("Отстутствуют склады. Вам необходимо добавить склад в настройках.",[{text: "Перейти в настройки", func: function () {
+							document.getElementsByTagName("html")[0].style.opacity = "";
+							setTimeout(function () {
+								window.location = "/Settings";
+							}, 500);
+						}}]);
+					}
 					else {
-						var req = new Request("/API/get_time");
-						req.callback = function (Response) {
-							try {
-								var answer = JSON.parse(Response);
-								if (answer.data) {
-									setDateNload(answer.data, storageAnswer.data, getVar("storage"));
+						if (getVar("onDate"))
+							setDateNload(getVar("onDate"), storageAnswer.data, getVar("storage"));
+						else {
+							var req = new Request("/API/get_time");
+							req.callback = function (Response) {
+								try {
+									var answer = JSON.parse(Response);
+									if (answer.data) {
+										setDateNload(answer.data, storageAnswer.data, getVar("storage"));
+									}
+									else
+										new Dialog("Ошибка ответа сервера");
 								}
-								else
-									new Dialog("Ошибка ответа сервера");
+								catch (ex) { console.error(ex); new Dialog(ex.message); }
 							}
-							catch (ex) { console.error(ex); new Dialog(ex.message); }
+							req.do();
 						}
-						req.do();
 					}
 				}
 				else
