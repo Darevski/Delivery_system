@@ -1,3 +1,4 @@
+var settingArray = [];
 function doOnLoad() {
 	try {
 		document.getElementsByTagName("html")[0].style.transition = "0.5s";
@@ -21,96 +22,67 @@ function doOnLoad() {
 			setTimeout(function () { window.location.href = "/Settings"; }, 600);
 		}
 		
-		document.getElementById("storage-settings").getElementsByClassName("add-floating-button")[0].onclick = addStorage;
-		loadStores();
-	}
-	catch (ex) { console.error(ex); new Dialog(ex.message); }
-}/*
-function storageOption() {
-	this.street = null;
-	this.house = null;
-	this.note = null;
-	this.name = null;
-	this.id = null;
-	
-	this.block = null;
-}
-storageOption.prototype = {
-	getData: function () {
-		return this;
-	},
-	update: function () {
-		try {
-			var body = {
-				storage_id: this.id,
-				name: this.name,
-				street: this.street,
-				house: this.house,
-				note: this.note
-			}
-			var _this = this;
-			var req = new Request("/Storages/update_storage", body);
-			req.callback = function (Response) {
-				try {
-					var ans = JSON.parse(Response);
-					if (ans.data.state == "success") {
-						AllSettings[0].remove(_this);
-					}
-					else
-						new Dialog(ans.data.message);
-				}
-				catch (ex) { console.error(ex); new Dialog(ex.message); }
-			}
-			req.do();
-		}
-		catch (ex) { console.error(ex); new Dialog(ex.message); }
-	},
-	display: function () {
+		var menu = document.getElementById("menu");
+		/* STORAGE SETTINGS */
 		
-	}
-}
-function storageSettings() {
-	this.options = [];
-}
-storageSettings.prototype = {
-	load: function () {
-		try {
-			var storageSet = document.querySelector("#storage-settings > div.option-container");
-			var req = new Request("/Storages/get_storages");
-			req.callback = function (Response) {
-				try {
-					var ans = JSON.parse(Response);
-					if (ans.data.state == "success") {
-						storageSet.innerHTML = "";
-						ans.data.storages.forEach(function (item) {
-
-							el.addEventListener("click", function () {
-								var body = {
-									storage_id: _this.id
-								}
-								var reqDelete = new Request("/Storages/delete_storage", body);
-								reqDelete.callback = function (ResponseDelete) {
-									
-								}
-								reqDelete.do();
-							});
-							main_el.appendChild(el);
-						});
-					}
-					else
-						new Dialog(ans.data.message);
+		var set = new Settings();
+		set.menublock = document.createElement("p");
+		set.menublock.innerHTML = "Склады";
+		set.menublock.addEventListener("click", function () {
+			set.show();
+		});
+		set.settingblock = document.getElementById("storage-settings");
+		set.editWindow = function (data) {
+			try {
+				var el = document.createElement("div");
+				el.setAttribute("class", "ex-bg");
+				el.innerHTML = '<div id="storage-edit"><input type="text" placeholder="Название склада"><input type="text" placeholder="Улица"><input type="text" placeholder="Дом"><input type="text" placeholder="Примечание"><div class="button-save"></div><div class="button-cancel"></div>';
+				if (data != void(0)) {
+					el.getElementsByTagName("input")[0].value = data.name;
+					el.getElementsByTagName("input")[1].value = data.street;
+					el.getElementsByTagName("input")[2].value = data.house;
+					el.getElementsByTagName("input")[3].value = data.note;
 				}
-				catch (ex) { console.error(ex); new Dialog(ex.message); }
+				el.querySelector("div.button-save").addEventListener("click", function () {
+					try {
+						var body = {
+							name: el.getElementsByTagName("input")[0].value,
+							street: el.getElementsByTagName("input")[1].value,
+							house: el.getElementsByTagName("input")[2].value,
+							note: el.getElementsByTagName("input")[3].value,
+						}
+						if (data != void(0)) {
+							body.storage_id = parseInt(data.id);
+							var req = new Request("/Storages/update_storage", body);
+						}
+						else
+							var req = new Request("/Storages/add_storage", body);
+						req.callback = function (Response) {
+							try {
+								var ans = JSON.parse(Response);
+								if (ans.data.state == "success") {
+									el.style.opacity = "";
+									setTimeout(function () { el.remove(); }, 500);
+								}
+								else
+									new Dialog(ans.data.message);
+							}
+							catch (ex) { console.error(ex); new Dialog(ex.message); }
+						}
+						req.do();
+					}
+					catch (ex) { console.error(ex); new Dialog(ex.message); }
+				});
+				el.querySelector("div.button-cancel").addEventListener("click", function () {
+					el.style.opacity = "";
+					setTimeout(function () { el.remove(); }, 500);
+				});
+				document.body.appendChild(el);
+				setTimeout(function () { el.style.opacity = 1; }, 50);
 			}
-			req.do();
+			catch (ex) { console.error(ex); new Dialog(ex.message); }
 		}
-		catch (ex) { console.error(ex); new Dialog(ex.message); }
-	}
-}
-*/
-
-function loadStores () {
-	try {
+		
 		var storageSet = document.querySelector("#storage-settings > div.option-container");
 		var req = new Request("/Storages/get_storages");
 		req.callback = function (Response) {
@@ -118,38 +90,53 @@ function loadStores () {
 				var ans = JSON.parse(Response);
 				if (ans.data.state == "success") {
 					storageSet.innerHTML = "";
+					set.items = ans.data.storages;
 					ans.data.storages.forEach(function (item) {
 						var main = document.createElement("div");
 						main.setAttribute("class", "option-storage");
 						main.setAttribute("data-id", item.id);
-						main.setAttribute("data-full", JSON.stringify(item));
-						
+
 						var el = document.createElement("p");
 						el.innerHTML = item.name;
 						main.appendChild(el);
-						
+
 						var el = document.createElement("p");
 						el.innerHTML = item.street + " " + item.house;
 						main.appendChild(el);
-						
+
 						var el = document.createElement("p");
 						el.innerHTML = item.note;
 						main.appendChild(el);
-						
+
 						var el = document.createElement("div");
 						el.setAttribute("class", "button-cancel");
 						el.addEventListener("click", function () {
-							deleteStorage(main);
+							try {
+								var body = {
+									storage_id: parseInt(item.id)
+								}
+								var req = new Request("/Storages/delete_storage", body);
+								req.callback = function (Response) {
+									try {
+										var ans = JSON.parse(Response);
+										if (ans.data.state != "success")
+											new Dialog(ans.data.message);
+									}
+									catch (ex) { console.error(ex); new Dialog(ex.message); }
+								}
+								req.do();
+							}
+							catch (ex) { console.error(ex); new Dialog(ex.message); }
 						});
 						main.appendChild(el);
 
 						var el = document.createElement("div");
 						el.setAttribute("class", "button-edit");
 						el.addEventListener("click", function () {
-							editStorage(main);
+							set.editWindow(item);
 						});
 						main.appendChild(el);
-						
+
 						storageSet.appendChild(main);
 					});
 				}
@@ -159,108 +146,35 @@ function loadStores () {
 			catch (ex) { console.error(ex); new Dialog(ex.message); }
 		}
 		req.do();
+		set.longpoll = function() {}
+		document.getElementById("storage-settings").getElementsByClassName("add-floating-button")[0].addEventListener("click", function () { set.editWindow(); });
+		menu.appendChild(set.menublock);
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
-function addStorage() {
-	try {
-		var el = document.createElement("div");
-		el.setAttribute("id", "storage-edit");
-		el.innerHTML = '<input type="text" placeholder="Название склада"><input type="text" placeholder="Улица"><input type="text" placeholder="Дом"><input type="text" placeholder="Примечание"><div class="button-save"></div><div class="button-cancel">';
-		el.getElementsByTagName("div")[0].addEventListener("click", function () {
-			try {
-				var body = {
-					name: el.getElementsByTagName("input")[0].value,
-					street: el.getElementsByTagName("input")[1].value,
-					house: el.getElementsByTagName("input")[2].value,
-					note: el.getElementsByTagName("input")[3].value
-				}
-				var req = new Request("/Storages/add_storage", body);
-				req.callback = function (Response) {
-					try {
-						var ans = JSON.parse(Response);
-						if (ans.data.state == "success") {
-							el.remove();
-							loadStores();
-						}
-						else
-							new Dialog(ans.data.message);
-					}
-					catch (ex) { console.error(ex); new Dialog(ex.message); }
-				}
-				req.do();
-			}
-			catch (ex) { console.error(ex); new Dialog(ex.message); }
-		});
-		el.getElementsByTagName("div")[1].addEventListener("click", function () {
-			el.remove();
-		});
-		document.body.appendChild(el);
-	}
-	catch (ex) { console.error(ex); new Dialog(ex.message); }
+
+function Settings() {
+	this.menublock = null;
+	this.settingblock = null;
+	this.longpoll = null;
+	this.longpullmd5 = null;
+	this.index = settingArray.length;
+	settingArray.push(this);
 }
-function editStorage(elem) {
-	try {
-		var el = document.createElement("div");
-		el.setAttribute("id", "storage-edit");
-		el.innerHTML = '<input type="text" placeholder="Название склада"><input type="text" placeholder="Улица"><input type="text" placeholder="Дом"><input type="text" placeholder="Примечание"><div class="button-save"></div><div class="button-cancel"></div>';
-		var info = JSON.parse(elem.getAttribute("data-full"));
-		el.getElementsByTagName("input")[0].value = info.name;
-		el.getElementsByTagName("input")[1].value = info.street;
-		el.getElementsByTagName("input")[2].value = info.house;
-		el.getElementsByTagName("input")[3].value = info.note;
-		el.getElementsByTagName("div")[0].addEventListener("click", function () {
-			try {
-				var body = {
-					name: el.getElementsByTagName("input")[0].value,
-					street: el.getElementsByTagName("input")[1].value,
-					house: el.getElementsByTagName("input")[2].value,
-					note: el.getElementsByTagName("input")[3].value,
-					storage_id: parseInt(elem.getAttribute("data-id"))
+Settings.prototype = {
+	show: function () {
+		if (this.menublock.getAttribute("selected") == void(0)) {
+			settingArray.forEach(function (item) {
+				if (item != this) {
+					(item.menublock != void(0)) && (item.menublock.removeAttribute("selected"));
+					(item.settingblock != void(0)) && (item.settingblock.removeAttribute("selected"));
+					(item.longpoll != void(0)) && (clearInterval(item.longpoll));
 				}
-				var req = new Request("/Storages/update_storage", body);
-				req.callback = function (Response) {
-					try {
-						var ans = JSON.parse(Response);
-						if (ans.data.state == "success") {
-							el.remove();
-							loadStores();
-						}
-						else
-							new Dialog(ans.data.message);
-					}
-					catch (ex) { console.error(ex); new Dialog(ex.message); }
-				}
-				req.do();
-			}
-			catch (ex) { console.error(ex); new Dialog(ex.message); }
-		});
-		el.getElementsByTagName("div")[1].addEventListener("click", function () {
-			el.remove();
-		});
-		document.body.appendChild(el);
-	}
-	catch (ex) { console.error(ex); new Dialog(ex.message); }
-}
-function deleteStorage(el) {
-	try {
-		var body = {
-			storage_id: parseInt(el.getAttribute("data-id"))
+			});
+			this.menublock.setAttribute("selected", "");
+			this.settingblock.setAttribute("selected", "");
+			this.longpoll();
 		}
-		var req = new Request("/Storages/delete_storage", body);
-		req.callback = function (Response) {
-			try {
-				var ans = JSON.parse(Response);
-				if (ans.data.state == "success") {
-					el.remove();
-				}
-				else
-					new Dialog(ans.data.message);
-			}
-			catch (ex) { console.error(ex); new Dialog(ex.message); }
-		}
-		req.do();
 	}
-	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
 window.onload = doOnLoad;

@@ -154,7 +154,7 @@ Dialog.prototype = {
 					_this.element.style.opacity = 1;
 				}
 				catch (ex) { console.error(ex); new Dialog(ex.message); }
-			}, 500);
+			}, 50);
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	}

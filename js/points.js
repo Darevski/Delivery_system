@@ -99,6 +99,12 @@ function DoOnLoad()
 								window.location = "/Settings";
 							}, 500);
 						}}]);
+						setTimeout(function () {
+							document.getElementsByTagName("html")[0].style.opacity = "";
+							setTimeout(function () {
+								window.location = "/Settings";
+							}, 500);
+						}, 3000);
 					}
 					else {
 						if (getVar("onDate"))

@@ -8,6 +8,26 @@
 @color-bad: #f4511e;
 @color-table-hover: #EEEEEE;
 
+@keyframes fade-right {
+	0% {
+		margin: 50px 0 0 200%;
+		position: absolute;
+		opacity: 0;
+		visibility: hidden;
+	}
+	1% {
+		margin: 50px 10% 0 30%;
+		position: relative;
+		opacity: 0;
+		visibility: visible;
+	}
+	100% {
+		margin: 50px 10% 0 10%;
+		position: relative;
+		opacity: 1;
+		visibility: visible;
+	}
+}
 #tab {
 	> * {
 		float: left;
@@ -45,16 +65,28 @@
 		box-shadow: inset 0px 0 15px -5px #000;
 		overflow-x: hidden;
 		overflow-y: auto;
+		position: relative;
 		
+		.option[selected] {
+			margin: 50px 10% 0 10%;
+			position: relative;
+			opacity: 1;
+			visibility: visible;
+			animation: fade-right 0.3s 1;
+			transition: 0;
+		}
 		.option {
 			min-height: 50px;
 			width: 80%;
-			margin: 50px 10% 0 10%;
+			margin: 50px 0 0 200%;
+			opacity: 0;
+			visibility: hidden;
 			padding-bottom: 20px;
 			background-color: @color-block;
 			box-shadow: 0px 0px 10px -1px @color-main-shadow;
-			position: relative;
+			position: absolute;
 			overflow: hidden;
+			transition: 0.3s;
 			
 			> p:first-child {
 				height: 48px;
@@ -126,6 +158,9 @@
 		width: 120px;
 		margin-left: 10px;
 	}
+	> input:focus {
+		border-bottom: 2px solid @color-main;
+	}
 	> input {
 		border: 0;
 		width: 340px;
@@ -134,16 +169,17 @@
 		padding: 0 5px 0 15px;
 		line-height: 50px;
 		border-bottom: 2px solid @color-delimeter;
+		transition: 0.2s;
 	}
 	> div.button-cancel {
 		bottom: 10px;
-		right: 39px;
+		right: 40px;
 		width: 24px;
 		position: absolute;
 	}
 	> div.button-save {
 		bottom: 10px;
-		right: 10px;
+		right: 5px;
 		width: 24px;
 		position: absolute;
 	}
