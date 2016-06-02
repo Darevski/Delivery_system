@@ -57,7 +57,7 @@ class Model_Orders extends Model{
      */
     public function get_list_orders_by_point_id($point_id,$company_id){
         // using Delivery Points model for verify the existence of point
-        if (!$this->Model_points->isset_point($point_id,$company_id))
+        if (!$this->Model_points->isset_point_for_user($point_id,$company_id))
             throw new Model_Except("Точки доставки не существует");
 
         $query = "SELECT order_id,description,cost FROM Orders WHERE Point_ID=?i";
@@ -107,6 +107,7 @@ class Model_Orders extends Model{
      */
     public function isset_order($order_id,$company_id){
         $query = "SELECT EXISTS (SELECT * FROM Orders WHERE Point_ID in (SELECT Point_ID FROM Delivery_Points WHERE Storage_ID in (SELECT id FROM Storages WHERE company_id=?i)) and Order_ID = ?i)";
-        return $this->database->getOne($query,$company_id,$order_id);
+        $result = $this->database->getOne($query,$company_id,$order_id);
+        return ($result == 1) ? true : false;
     }
 }

@@ -1,5 +1,7 @@
 var Routes = [];
 var myMap;
+var StoragesArray = [];
+var selectedStorage;
 
 /** Загружает карту, по загрузке выполняет функцию DoOnLoad
 *
@@ -18,7 +20,7 @@ ymaps.ready(function () {
 */
 function DoOnLoad()
 {
-	function setDateNload(dateToSet) {
+	function setDateNload(dateToSet, storages, selectedStore) {
 		try {
 			var _t = new Date(dateToSet * 1000);
 			var date_input = _t.getFullYear() + "-";
@@ -27,38 +29,109 @@ function DoOnLoad()
 			(_t.getDate() < 10) && (date_input += "0");
 			date_input += _t.getDate();
 			document.querySelector('#store-date > input[type="date"]').value = date_input;
+			var storageContainer = document.querySelector("#store-choose > select");
+			storages.storages.forEach(function (item, i) {
+				StoragesArray.push(item);
+				var elem = document.createElement("option");
+				elem.setAttribute("value", i);
+				elem.innerHTML = item.name;
+				storageContainer.appendChild(elem);
+			});
+			(!selectedStore) && (selectedStore = 0);
+			storageContainer.selectedIndex = parseInt(selectedStore);
+			selectedStorage = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id;
 			delVar("pending");
 			delVar("onDate");
+			delVar("storage");
 			loadOnDate();
 		}
 		catch (ex) { console.error(ex); new Dialog(ex.message); }
 	}
 	try {
-		document.body.style.opacity = "1";
+		document.getElementsByTagName("html")[0].style.transition = "0.5s";
+		document.getElementsByTagName("html")[0].style.opacity = "1";
 		/* Меню */
 		var top_tabs = document.getElementById("tab-bar").children;
-		top_tabs[0].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { var date = new Date(document.querySelector('#store-date > input[type="date"]').value); setVar("onDate", date.getTime() / 1000); window.location.href = "/"; }, 600); }
-		top_tabs[1].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { var date = new Date(document.querySelector('#store-date > input[type="date"]').value); setVar("onDate", date.getTime() / 1000); window.location.href = "/Route"; }, 600); }
-		top_tabs[2].onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/API/user_exit"; }, 600); }
-		document.getElementById("routes-print").onclick = function () { document.body.style.opacity = ""; setTimeout(function () { window.location.href = "/Route/get_pdf_routes"; }, 600); }
-		document.querySelector('#store-date > input[type="date"]').onchange = loadOnDate;
-		if (getVar("onDate"))
-			setDateNload(getVar("onDate"));
-		else {
-			var req = new Request("/API/get_time");
-			req.callback = function (Response) {
-				try {
-					var answer = JSON.parse(Response);
-					if (answer.data) {
-						setDateNload(answer.data);
-					}
-					else
-						new Dialog("Ошибка ответа сервера");
-				}
-				catch (ex) { console.error(ex); new Dialog(ex.message); }
-			}
-			req.do();
+		top_tabs[0].onclick = function () {
+			document.getElementsByTagName("html")[0].style.opacity = "";
+			setTimeout(function () {
+				var date = new Date(document.querySelector('#store-date > input[type="date"]').value);
+				setVar("onDate", date.getTime() / 1000);
+				setVar("storage", document.querySelector('#store-choose > select').selectedIndex);
+				window.location.href = "/";
+			}, 600);
 		}
+		top_tabs[1].onclick = function () {
+			document.getElementsByTagName("html")[0].style.opacity = "";
+			setTimeout(function () {
+				var date = new Date(document.querySelector('#store-date > input[type="date"]').value);
+				setVar("onDate", date.getTime() / 1000);
+				setVar("storage", document.querySelector('#store-choose > select').selectedIndex);
+				window.location.href = "/Route";
+			}, 600);
+		}
+		top_tabs[3].onclick = function () {
+			document.getElementsByTagName("html")[0].style.opacity = "";
+			setTimeout(function () { window.location.href = "/API/user_exit"; }, 600);
+		}
+		top_tabs[2].onclick = function () {
+			document.getElementsByTagName("html")[0].style.opacity = "";
+			setTimeout(function () { window.location.href = "/Settings"; }, 600);
+		}
+		document.getElementById("routes-print").onclick = printRoutes;
+		document.querySelector('#store-date > input[type="date"]').onchange = loadOnDate;
+		document.querySelector('#store-choose > select').onchange = function () { selectedStorage = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id; loadOnDate(); };
+		
+		
+		var storageReq = new Request("/Storages/get_storages");
+		storageReq.callback = function (storageResponse) {
+			try {
+				var storageAnswer = JSON.parse(storageResponse);
+				if (storageAnswer.data.state === "success") {
+					if (storageAnswer.data.storages.length == 0) {
+						new Dialog("Отстутствуют склады. Вам необходимо добавить склад в настройках.",[{text: "Перейти в настройки", func: function () {
+							document.getElementsByTagName("html")[0].style.opacity = "";
+							setTimeout(function () {
+								window.location = "/Settings";
+							}, 500);
+						}}]);
+						setTimeout(function () {
+							document.getElementsByTagName("html")[0].style.opacity = "";
+							setTimeout(function () {
+								window.location = "/Settings";
+							}, 500);
+						}, 3000);
+					}
+					else {
+						if (getVar("onDate"))
+							setDateNload(getVar("onDate"), storageAnswer.data, getVar("storage"));
+						else {
+							var req = new Request("/API/get_time");
+							req.callback = function (Response) {
+								try {
+									var answer = JSON.parse(Response);
+									if (answer.data) {
+										setDateNload(answer.data, storageAnswer.data, getVar("storage"));
+									}
+									else
+										new Dialog("Ошибка ответа сервера");
+								}
+								catch (ex) { console.error(ex); new Dialog(ex.message); }
+							}
+							req.do();
+						}
+					}
+				}
+				else
+					new Dialog(storageAnswer.data.message);
+			}
+			catch (ex) { console.error(ex); new Dialog(ex.message); }
+		}
+		storageReq.do();
+		
+		
+		
+		
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
 }
@@ -214,8 +287,8 @@ Route.prototype = {
 function loadOnDate()
 {
 	try{
-		var mainlat = 53.9383;
-		var mainlon = 27.5783;
+		var mainlat = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].Latitude;
+		var mainlon = StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].Longitude;
 		var delay = 10;
 		for (var i = 0; i<Routes.length; i++) {
 			Routes[i].delete();
@@ -224,7 +297,8 @@ function loadOnDate()
 		setTimeout(function (){
 			var temp = new Date(document.querySelector('#store-date > input[type="date"]').value);
 			var body = {
-				date: temp.getTime() / 1000
+				date: temp.getTime() / 1000,
+				storage_id: StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id
 			}
 			var req = new Request("/Route/get_routes", body);
 			req.callback = function (Response) {
@@ -264,4 +338,76 @@ function loadOnDate()
 		}, delay);
 	}
 	catch (ex) { console.error(ex); new Dialog(ex.message); }
+}
+
+function printRoutes() {
+	loader = new PreLoader();
+	loader.inprogress = function () {
+		var temp = new Date(document.querySelector('#store-date > input[type="date"]').value);
+		var body = {
+			date: temp.getTime() / 1000,
+			storage_id: StoragesArray[parseInt(document.querySelector('#store-choose > select').value)].id
+		}
+		var afterLoad = function (Response) {
+			try {
+				if (Response.substring(0,4) != "%PDF") {
+					var ans = JSON.parse(Response);
+					new Dialog(ans.data.message);
+				}
+				else {
+					loader.purge();
+					document.getElementsByTagName("html")[0].style.opacity = "";
+					setTimeout(function () {
+						window.location = "/Route/get_pdf_routes?Json_input=" + JSON.stringify(body);
+					}, 500);
+				}
+
+			}
+			catch (ex) { console.error(ex); new Dialog(ex.message); }
+		}
+		
+		var xhr = new XMLHttpRequest();
+		var already_processed = false;
+		xhr.open("GET", "/Route/get_pdf_routes?Json_input=" + JSON.stringify(body), true);
+		xhr.onreadystatechange = function()
+		{
+			try {
+				if (xhr.readyState == 4)
+					if (xhr.status == 200)
+					{
+						var json_response = document.createElement("html");
+						json_response.innerHTML = xhr.responseText;
+						var answer = json_response.getElementsByTagName("json")[0];
+						if (answer != void(0))
+							afterLoad(answer.innerHTML);
+						else
+							afterLoad(xhr.responseText);
+					}
+					else
+					{
+						if (!already_processed)
+						   {
+								var json_response = document.createElement("html");
+								json_response.innerHTML = xhr.responseText;
+								var answer = json_response.getElementsByTagName("json")[0];
+								already_processed = true;
+
+								if (answer != void(0))
+									afterLoad(answer.innerHTML);
+								else
+									{
+										var ans = {};
+										ans.data.state = "fail";
+										ans.data.message = xhr.responseText;
+										console.error = xhr.response;
+										afterLoad(JSON.stringify(ans));
+									}
+						   }
+					}
+			}
+			catch (ex) { console.error(ex); new Dialog(ex.message); }
+		}
+		xhr.send();
+	}
+	loader.create();
 }

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: May 29, 2016 at 10:29 PM
+-- Generation Time: May 31, 2016 at 10:16 PM
 -- Server version: 5.5.49-0ubuntu0.14.04.1
 -- PHP Version: 5.6.22-1+donate.sury.org~trusty+1
 
@@ -81,7 +81,7 @@ DROP TRIGGER IF EXISTS `Delete Route After Add point`;
 DELIMITER //
 CREATE TRIGGER `Delete Route After Add point` AFTER INSERT ON `Delivery_Points`
  FOR EACH ROW BEGIN
-	DELETE FROM Routes WHERE calculating_date=new.Delivery_Date;
+	DELETE FROM Routes WHERE calculating_date=new.Delivery_Date and Storage_ID = NEW.Storage_ID;
 END
 //
 DELIMITER ;
@@ -89,7 +89,7 @@ DROP TRIGGER IF EXISTS `Delete Route After Delete point`;
 DELIMITER //
 CREATE TRIGGER `Delete Route After Delete point` AFTER DELETE ON `Delivery_Points`
  FOR EACH ROW BEGIN
-	DELETE FROM Routes WHERE calculating_date=OLD.Delivery_Date;
+	DELETE FROM Routes WHERE calculating_date=OLD.Delivery_Date and Storage_ID = OLD.Storage_ID;
 END
 //
 DELIMITER ;
@@ -98,7 +98,7 @@ DELIMITER //
 CREATE TRIGGER `Delete Route After Update point` AFTER UPDATE ON `Delivery_Points`
  FOR EACH ROW BEGIN
 	IF (NEW.STREET != OLD.STREET OR NEW.HOUSE != OLD.HOUSE OR OLD.Delivery_Date != NEW.Delivery_Date OR OLD.time_start != NEW.time_start OR OLD.time_end != NEW.time_end) THEN
-		DELETE FROM Routes WHERE (calculating_date=OLD.Delivery_Date OR calculating_date=new.Delivery_Date);
+		DELETE FROM Routes WHERE (calculating_date=OLD.Delivery_Date OR calculating_date=new.Delivery_Date) and Storage_ID = NEW.Storage_ID;
 	END IF;
 END
 //
@@ -184,7 +184,36 @@ CREATE TABLE IF NOT EXISTS `Storages` (
   `Longitude` double NOT NULL,
   PRIMARY KEY (`id`),
   KEY `company_id` (`company_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=2 ;
+
+--
+-- Dumping data for table `Storages`
+--
+
+INSERT INTO `Storages` (`id`, `name`, `company_id`, `note`, `street`, `house`, `Latitude`, `Longitude`) VALUES
+(1, 'запасной', 1, 'тест', 'улица Сергея Есенина', '96', 53.864506, 27.441547);
+
+--
+-- Triggers `Storages`
+--
+DROP TRIGGER IF EXISTS `Delete Route After Delete Storage`;
+DELIMITER //
+CREATE TRIGGER `Delete Route After Delete Storage` AFTER DELETE ON `Storages`
+ FOR EACH ROW BEGIN
+	DELETE FROM Routes WHERE Storage_ID = OLD.id;
+END
+//
+DELIMITER ;
+DROP TRIGGER IF EXISTS `Delete Route After Update Storage`;
+DELIMITER //
+CREATE TRIGGER `Delete Route After Update Storage` AFTER UPDATE ON `Storages`
+ FOR EACH ROW BEGIN
+	IF (NEW.STREET != OLD.STREET OR NEW.HOUSE != OLD.HOUSE ) THEN
+		DELETE FROM Routes WHERE (Storage_ID = NEW.id);
+	END IF;
+END
+//
+DELIMITER ;
 
 --
 -- Constraints for dumped tables
